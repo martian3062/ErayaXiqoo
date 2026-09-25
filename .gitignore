@@ -1,0 +1,28 @@
+# Gradle / Android
+.gradle/
+build/
+local.properties
+.idea/
+*.iml
+.kotlin/
+captures/
+.cxx/
+.externalNativeBuild/
+
+# Model files are never committed (CLAUDE.md rule 7) — push them to the device instead
+models/
+*.gguf
+*.bin
+*.onnx
+*.tflite
+*.dlc
+*.qnn
+*.serialized
+
+# Local recordings
+*.m4a
+recordings/
+
+# Python
+__pycache__/
+.venv/

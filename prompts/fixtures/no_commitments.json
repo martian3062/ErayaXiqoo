@@ -1,0 +1,7 @@
+{
+  "name": "chatter only, expect zero proposals",
+  "today": "2026-09-26",
+  "transcript": "So the demo went well yesterday. Maybe we could try a Telugu version someday. Alex already sent the slides last week. Honestly the coffee here is great. Should we think about a dashboard? Not sure yet.",
+  "expected": [],
+  "must_not_mention": ["telugu", "slides", "dashboard"]
+}

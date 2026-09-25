@@ -1,0 +1,11 @@
+{
+  "name": "demo script, Hindi line in Devanagari (what whisper often outputs with -l auto)",
+  "today": "2026-09-26",
+  "transcript": "Okay, quick sync on the clinic rollout. Weather's been crazy, by the way. Tell me about it. So where are we on the patient intake form? I'll send you the revised intake form by Friday evening. Great. Maybe we should also think about a WhatsApp reminder someday. हां, और फार्मेसी वाले डेटा का क्या? मैं कल तक फार्मेसी का स्टॉक रिपोर्ट भेज दूंगा। Perfect. And Alex already fixed the printer last week. One more thing — can you book the training room for Monday? Yes, I'll book the training room for Monday morning today itself.",
+  "expected": [
+    { "evidence_contains": "revised intake form", "deadline_prefix": "2026-10-02" },
+    { "evidence_contains": "स्टॉक रिपोर्ट", "deadline_prefix": "2026-09-27" },
+    { "evidence_contains": "book the training room", "deadline_prefix": "2026-09-26" }
+  ],
+  "must_not_mention": ["whatsapp", "printer"]
+}

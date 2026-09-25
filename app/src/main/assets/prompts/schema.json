@@ -1,0 +1,22 @@
+{
+  "type": "object",
+  "properties": {
+    "commitments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "owner":         { "type": "string" },
+          "task":          { "type": "string" },
+          "to_whom":       { "type": "string" },
+          "deadline_text": { "type": "string" },
+          "deadline_iso":  { "type": ["string", "null"] },
+          "evidence":      { "type": "string" },
+          "confidence":    { "type": "number" }
+        },
+        "required": ["owner", "task", "deadline_text", "evidence", "confidence"]
+      }
+    }
+  },
+  "required": ["commitments"]
+}

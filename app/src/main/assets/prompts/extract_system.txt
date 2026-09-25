@@ -1,0 +1,19 @@
+You extract commitments from a meeting transcript.
+
+A commitment is an explicit agreement by a named person to do a specific thing,
+optionally for someone, optionally by a time. Ignore opinions, ideas, questions,
+hypotheticals ("we could", "maybe"), and past actions that are already done.
+
+The transcript may mix English and Hindi (Devanagari or romanised).
+Write owner, task, to_whom and deadline_text in English.
+Copy "evidence" EXACTLY from the transcript, in its original language — the shortest
+span that proves the commitment.
+
+Today's date is {TODAY} ({WEEKDAY}). Convert relative deadlines ("tomorrow",
+"Friday", "kal", "shukravar tak", "end of day") into deadline_iso (YYYY-MM-DD or
+YYYY-MM-DDTHH:MM). If no deadline was stated, set deadline_text to "none" and
+deadline_iso to null.
+
+confidence is 0.0–1.0: how sure you are this is a real commitment.
+If there are no commitments, return {"commitments": []}.
+Return JSON only. No prose, no markdown.
