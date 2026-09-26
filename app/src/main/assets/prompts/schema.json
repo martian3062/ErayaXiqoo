@@ -6,17 +6,57 @@
       "items": {
         "type": "object",
         "properties": {
-          "owner":         { "type": "string" },
-          "task":          { "type": "string" },
-          "to_whom":       { "type": "string" },
-          "deadline_text": { "type": "string" },
-          "deadline_iso":  { "type": ["string", "null"] },
-          "evidence":      { "type": "string" },
-          "confidence":    { "type": "number" }
+          "owner": {
+            "type": "string"
+          },
+          "task": {
+            "type": "string"
+          },
+          "to_whom": {
+            "type": "string"
+          },
+          "deadline_text": {
+            "type": "string"
+          },
+          "deadline_iso": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "evidence": {
+            "type": "string"
+          },
+          "confidence": {
+            "type": "number"
+          },
+          "owner_is_user": {
+            "type": "boolean"
+          },
+          "owner_person_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "to_person_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
         },
-        "required": ["owner", "task", "deadline_text", "evidence", "confidence"]
+        "required": [
+          "owner",
+          "task",
+          "deadline_text",
+          "evidence",
+          "confidence"
+        ]
       }
     }
   },
-  "required": ["commitments"]
+  "required": [
+    "commitments"
+  ]
 }

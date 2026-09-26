@@ -13,6 +13,10 @@ import com.evolet.tachyon.eraya.ExtractionAgent
 import com.evolet.tachyon.eraya.Prompts
 import com.evolet.tachyon.net.Connectivity
 import com.evolet.tachyon.session.SessionController
+import com.evolet.tachyon.twin.PersonaStore
+import com.evolet.tachyon.twin.PromptContext
+import com.evolet.tachyon.twin.RiskScorer
+import java.time.LocalDateTime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -29,8 +33,17 @@ class AppContainer(app: Application) {
     val engines = EngineRegistry(app, settings, scope)       // starts loading engines immediately
     val bus = AgentBus()
 
+    // Twin layer (INTEGRATIONSv2.md §5, §8): confirmed persona + fictional demo people
+    val personaStore = PersonaStore(app)
+
     // ERAYA agents (INTEGRATIONSv2.md §3)
-    private val extraction = ExtractionAgent(prompts)
+
+    private val extraction = ExtractionAgent(
+        prompts,
+        context = { PromptContext.block(personaStore.persona.value, personaStore.people.value) },
+        personIds = { personaStore.people.value.mapTo(HashSet()) { it.id } },
+        risk = { task, iso -> RiskScorer.risk(task, iso, personaStore.persona.value, LocalDateTime.now()) },
+    )
     val perceiver = Perceiver(bus, engines::asr)
     val planner = Planner(bus, engines::llm, extraction::extract, Verifier())
     val recoverer = Recoverer(bus, engines::retry).also { it.start(scope) }

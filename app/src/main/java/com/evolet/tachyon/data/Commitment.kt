@@ -13,6 +13,11 @@ data class Commitment(
     val evidence: String, val confidence: Double,
     val status: Status,                 // PROPOSED, ACCEPTED, REJECTED
     val decidedAt: Long?,
+    // F13 people-aware extraction (INTEGRATIONSv2.md §5.2)
+    val ownerIsUser: Boolean = false,
+    val ownerPersonId: String? = null,
+    val toPersonId: String? = null,
+    val riskNote: String? = null,
 )
 
 enum class Status { PROPOSED, ACCEPTED, REJECTED }

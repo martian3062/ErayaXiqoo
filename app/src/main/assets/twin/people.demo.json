@@ -1,0 +1,10 @@
+[
+  { "id": "p_alex", "name": "Alex", "aliases": ["Alex sir"], "relation": "manager",
+    "register": "formal", "channel": "email", "trust_tier": "WORK" },
+  { "id": "p_sam", "name": "Sam", "aliases": ["Sammy"], "relation": "friend",
+    "register": "casual_hinglish", "channel": "whatsapp", "trust_tier": "PERSONAL" },
+  { "id": "p_jordan", "name": "Jordan", "aliases": [], "relation": "colleague",
+    "register": "neutral", "channel": "whatsapp", "trust_tier": "WORK" },
+  { "id": "p_maya", "name": "Maya", "aliases": [], "relation": "sister",
+    "register": "family", "channel": "whatsapp", "trust_tier": "PERSONAL" }
+]

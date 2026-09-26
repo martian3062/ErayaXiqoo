@@ -14,6 +14,10 @@ data class Proposal(
     val deadlineIso: String?,
     val evidence: String,
     val confidence: Double,
+    val ownerIsUser: Boolean = false,
+    val ownerPersonId: String? = null,
+    val toPersonId: String? = null,
+    val riskNote: String? = null,
 )
 
 sealed interface ExtractionResult {
@@ -37,13 +41,19 @@ class ExtractionAgent(
     private val validator: SchemaValidator = SchemaValidator(),
     private val deadlines: DeadlineResolver = DeadlineResolver(),
     private val today: () -> LocalDate = { LocalDate.now() },
+    /** F13: OWNER PROFILE + PEOPLE block (empty string = base prompt unchanged). */
+    private val context: () -> String = { "" },
+    /** F13: known PEOPLE ids; anything else the model returns is nulled (§5.2 validator rule). */
+    private val personIds: () -> Set<String> = { emptySet() },
+    /** F13: deterministic "Tight for you" risk (task, deadlineIso) → note. */
+    private val risk: (String, String?) -> String? = { _, _ -> null },
 ) {
 
     suspend fun extract(llm: LlmEngine, transcript: String): ExtractionResult {
         val date = today()
         var latency = 0L
         return try {
-            val system = prompts.system(date)
+            val system = context() + prompts.system(date)
             val schema = prompts.schema()
 
             var result = llm.complete(system, transcript, schema, MAX_TOKENS)
@@ -78,15 +88,24 @@ class ExtractionAgent(
         }
     }
 
-    private fun RawCommitment.toProposal(date: LocalDate) = Proposal(
-        owner = owner.trim().ifEmpty { "Unknown" },
-        task = task.trim(),
-        toWhom = toWhom?.trim()?.takeUnless { it.isEmpty() || it.equals("none", true) || it.equals("null", true) },
-        deadlineText = deadlineText.trim().ifEmpty { "none" },
-        deadlineIso = deadlines.resolve(deadlineText, deadlineIso, date),
-        evidence = evidence.trim(),
-        confidence = confidence,
-    )
+    private fun RawCommitment.toProposal(date: LocalDate): Proposal {
+        val ids = personIds()
+        val iso = deadlines.resolve(deadlineText, deadlineIso, date)
+        return Proposal(
+            owner = owner.trim().ifEmpty { "Unknown" },
+            task = task.trim(),
+            toWhom = toWhom?.trim()?.takeUnless { it.isEmpty() || it.equals("none", true) || it.equals("null", true) },
+            deadlineText = deadlineText.trim().ifEmpty { "none" },
+            deadlineIso = iso,
+            evidence = evidence.trim(),
+            confidence = confidence,
+            ownerIsUser = ownerIsUser == true,
+            ownerPersonId = ownerPersonId?.takeIf { it in ids },
+            toPersonId = toPersonId?.takeIf { it in ids },
+            riskNote = if (ownerIsUser == true) risk(task, iso) else null,
+        )
+    }
+
 
     private companion object {
         const val TAG = "ExtractionAgent"

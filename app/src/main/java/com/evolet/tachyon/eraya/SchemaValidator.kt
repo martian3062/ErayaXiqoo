@@ -16,6 +16,9 @@ data class RawCommitment(
     @SerialName("deadline_iso") val deadlineIso: String? = null,
     val evidence: String = "",
     val confidence: Double = 0.0,
+    @SerialName("owner_is_user") val ownerIsUser: Boolean? = null,
+    @SerialName("owner_person_id") val ownerPersonId: String? = null,
+    @SerialName("to_person_id") val toPersonId: String? = null,
 )
 
 @Serializable

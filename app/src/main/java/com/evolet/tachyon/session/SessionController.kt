@@ -220,6 +220,10 @@ class SessionController(
         evidence = evidence, confidence = confidence,
         status = Status.PROPOSED,
         decidedAt = null,
+        ownerIsUser = ownerIsUser,
+        ownerPersonId = ownerPersonId,
+        toPersonId = toPersonId,
+        riskNote = riskNote,
     )
 
     private companion object {
