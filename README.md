@@ -61,6 +61,8 @@ Offline is the guarantee, the NPU is the speed-up. The CPU fallback is built fir
 
 ## Run it on your phone
 
+> 📱 **Setting up a fresh iQOO 15?** Follow **[PHONE_SETUP.md](PHONE_SETUP.md)**, the full step-by-step with checklists. The short version is below.
+
 ### 1. Install the app
 
 1. Open **Actions** in this repo, then the latest green **build-apk** run.
