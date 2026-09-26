@@ -5,6 +5,7 @@ import com.evolet.tachyon.agents.AgentBus
 import com.evolet.tachyon.agents.Perceiver
 import com.evolet.tachyon.agents.Planner
 import com.evolet.tachyon.agents.Recoverer
+import com.evolet.tachyon.agents.Verifier
 import com.evolet.tachyon.data.AppDb
 import com.evolet.tachyon.data.AppSettings
 import com.evolet.tachyon.eraya.ConfirmationLoop
@@ -31,7 +32,7 @@ class AppContainer(app: Application) {
     // ERAYA agents (INTEGRATIONSv2.md §3)
     private val extraction = ExtractionAgent(prompts)
     val perceiver = Perceiver(bus, engines::asr)
-    val planner = Planner(bus, engines::llm, extraction::extract)
+    val planner = Planner(bus, engines::llm, extraction::extract, Verifier())
     val recoverer = Recoverer(bus, engines::retry).also { it.start(scope) }
 
     val confirmation = ConfirmationLoop(db.commitmentDao(), bus)

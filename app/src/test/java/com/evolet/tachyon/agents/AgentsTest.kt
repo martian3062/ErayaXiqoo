@@ -77,7 +77,7 @@ class AgentsTest {
         val bus = AgentBus()
         val p = Proposal("A", "Send form", null, "Friday", null, "I'll send the form", 0.9)
         val seen = events(bus) {
-            Planner(bus, { FakeLlm }) { _, _ -> ExtractionResult.Ok(listOf(p), 0, null, 5, "fake-llm") }.plan("s1", "I'll send the form")
+            Planner(bus, { FakeLlm }, extract = { _, _ -> ExtractionResult.Ok(listOf(p), 0, null, 5, "fake-llm") }).plan("s1", "I'll send the form")
         }
         assertTrue(seen[0] is AgentEvent.TranscriptClosed)
         assertEquals(listOf(p), (seen[1] as AgentEvent.ProposalsReady).items)
@@ -92,5 +92,37 @@ class AgentsTest {
         t = 12_000; assertFalse(r.onDegraded(e))
         t = 15_001; assertTrue(r.onDegraded(e))
         assertEquals(2, probes)
+    }
+
+    private class ScriptedLlm(private val reply: String) : LlmEngine {
+        override val name = "scripted"
+        override suspend fun load() = Unit
+        override suspend fun complete(system: String, user: String, jsonSchema: String?, maxTokens: Int) = LlmResult(reply, 7, null)
+        override fun close() = Unit
+    }
+
+    private fun prop(ev: String) = Proposal("A", "t", null, "none", null, ev, 0.9)
+
+    @Test fun `verifier drops items voted false`() = runBlocking {
+        val r = Verifier().verify(ScriptedLlm("""{"verdicts":[true,false]}"""), "tx", listOf(prop("I'll send it"), prop("maybe later")))
+        assertEquals(listOf("I'll send it"), r.kept.map { it.evidence })
+        assertEquals(1, r.rejected)
+    }
+
+    @Test fun `verifier fails open on garbage or short verdicts`() = runBlocking {
+        val items = listOf(prop("a"), prop("b"))
+        assertEquals(2, Verifier().verify(ScriptedLlm("no idea"), "tx", items).kept.size)
+        assertEquals(2, Verifier().verify(ScriptedLlm("""{"verdicts":[false]}"""), "tx", items).kept.size)
+    }
+
+    @Test fun `planner applies verifier and adds its latency`() {
+        val bus = AgentBus()
+        val ok = ExtractionResult.Ok(listOf(prop("keep"), prop("drop")), 0, null, 5, "scripted")
+        val r = runBlocking {
+            Planner(bus, { ScriptedLlm("""{"verdicts":[true,false]}""") }, { _, _ -> ok }, Verifier()).plan("s", "tx")
+        } as ExtractionResult.Ok
+        assertEquals(1, r.items.size)
+        assertEquals(1, r.dropped)
+        assertEquals(12, r.latencyMs)
     }
 }

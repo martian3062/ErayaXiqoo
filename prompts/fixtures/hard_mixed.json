@@ -1,0 +1,11 @@
+{
+  "name": "harder English: promises mixed with questions, conditionals, past actions",
+  "today": "2026-09-26",
+  "transcript": "Morning everyone. Sam, did the vendor call happen? Yes, I spoke to them yesterday. Okay. I'll share the vendor contract with legal by Tuesday. Could someone check the parking passes? Not sure. Jordan, can you update the budget sheet tonight? Yes, I'll update the budget sheet tonight. If the client agrees, we might move the launch to November. Also, I'll call the landlord first thing tomorrow morning. We should probably redesign the logo at some point.",
+  "expected": [
+    { "evidence_contains": "vendor contract", "deadline_prefix": "2026-09-29" },
+    { "evidence_contains": "budget sheet tonight", "deadline_prefix": "2026-09-26" },
+    { "evidence_contains": "call the landlord", "deadline_prefix": "2026-09-27" }
+  ],
+  "must_not_mention": ["parking", "launch", "logo", "spoke to them"]
+}

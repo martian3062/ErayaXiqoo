@@ -1,0 +1,10 @@
+{
+  "name": "Hinglish: two promises, one past action, one hedge",
+  "today": "2026-09-26",
+  "transcript": "Chalo, quick update. Main Monday tak invoice bhej dunga. Tum kal presentation review kar lena? Haan, main kal subah presentation review kar lunga. Pichle hafte Sam ne server fix kar diya tha. Shayad hum agle mahine offsite plan karein.",
+  "expected": [
+    { "evidence_contains": "invoice bhej dunga", "deadline_prefix": "2026-09-28" },
+    { "evidence_contains": "presentation review kar lunga", "deadline_prefix": "2026-09-27" }
+  ],
+  "must_not_mention": ["server", "offsite"]
+}
