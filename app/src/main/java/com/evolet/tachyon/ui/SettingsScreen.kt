@@ -14,6 +14,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Switch
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,6 +42,7 @@ fun SettingsScreen(
     onDeleteTwin: () -> Unit,
     onInterview: (demo: Boolean) -> Unit,
     personaSummary: String,
+    onTestReminder: () -> Unit,
 ) {
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
@@ -58,6 +60,14 @@ fun SettingsScreen(
         listOf(LANG_AUTO to "Auto-detect", "en" to "English", "hi" to "Hindi").forEach { (code, label) ->
             Choice(label, settings.language == code) { onChange { it.copy(language = code) } }
         }
+
+        Section("Reminders")
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text("Speak reminders aloud (AI voice)", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+            Switch(checked = settings.speakReminders, onCheckedChange = { on -> onChange { it.copy(speakReminders = on) } })
+        }
+        OutlinedButton(onClick = onTestReminder, modifier = Modifier.fillMaxWidth()) { Text("Test reminder now (latest accepted task)") }
+        Hint("Reminders fire 24 h and 2 h before a deadline, outside your quiet hours. Only for tasks you accepted.")
 
         Section("Demo backup")
         Button(onClick = onUseSample, modifier = Modifier.fillMaxWidth()) { Text("Use sample recording") }

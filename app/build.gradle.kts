@@ -68,5 +68,8 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.android)
 
+    // F19 reminders: survives reboot/Doze without the exact-alarm permission.
+    implementation(libs.androidx.work)
+
     testImplementation(libs.junit)
 }

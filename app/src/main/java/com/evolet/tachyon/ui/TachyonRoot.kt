@@ -189,6 +189,14 @@ fun TachyonRoot(container: AppContainer) {
                             }
                         },
                         onInterview = { demo -> container.interview.start(demo) },
+                        onTestReminder = {
+                            val latest = accepted.firstOrNull()
+                            if (latest == null) Toast.makeText(context, "Accept a task first", Toast.LENGTH_SHORT).show()
+                            else {
+                                container.reminders.fireSoon(latest)
+                                Toast.makeText(context, "Reminder in ~3 s: ${latest.task}", Toast.LENGTH_SHORT).show()
+                            }
+                        },
                         onDeleteTwin = {
                             scope.launch {
                                 val deleted = container.personaStore.wipe()
