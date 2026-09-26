@@ -13,19 +13,30 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -35,8 +46,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
@@ -52,6 +65,7 @@ import com.evolet.tachyon.twin.Stage
 import com.evolet.tachyon.ui.components.OfflineBadge
 import com.evolet.tachyon.ui.components.TachyonIcons
 import com.evolet.tachyon.ui.components.Wordmark
+import com.evolet.tachyon.ui.theme.ErayaBackdrop
 import com.evolet.tachyon.ui.navigation.AboutRoute
 import com.evolet.tachyon.ui.navigation.AppRoute
 import com.evolet.tachyon.ui.navigation.CaptureRoute
@@ -258,41 +272,82 @@ fun TachyonRoot(container: AppContainer) {
     }
 
     val interviewVisible = navigator.currentRoute is InterviewRoute
-    Scaffold(
-        topBar = {
-            if (!interviewVisible) AppTopBar(navigator.currentRoute, net, compute, onBack = ::goBack, onSettings = { navigator.navigate(SettingsRoute) })
-        },
-        bottomBar = {
-            if (!interviewVisible) {
-                NavigationBar {
-                    TopLevelTab.entries.forEach { tab ->
-                        NavigationBarItem(
-                            selected = navigator.selectedTab == tab,
-                            onClick = { if (navigator.selectedTab == tab) navigator.reset(tab) else navigator.select(tab) },
-                            icon = { Icon(tab.icon(), contentDescription = null) },
-                            label = { Text(tab.label) },
-                        )
-                    }
+    ErayaBackdrop {
+        Scaffold(
+            containerColor = Color.Transparent,
+            topBar = {
+                if (!interviewVisible) AppTopBar(navigator.currentRoute, net, compute, onBack = ::goBack, onSettings = { navigator.navigate(SettingsRoute) })
+            },
+            bottomBar = {
+                if (!interviewVisible) {
+                    FloatingTabBar(
+                        selected = navigator.selectedTab,
+                        onSelect = { tab -> if (navigator.selectedTab == tab) navigator.reset(tab) else navigator.select(tab) },
+                    )
+                }
+            },
+        ) { padding ->
+            AnimatedContent(
+                targetState = navigator.selectedTab,
+                modifier = Modifier.fillMaxSize().padding(padding),
+                transitionSpec = {
+                    val direction = if (targetState.ordinal > initialState.ordinal) 1 else -1
+                    (slideInHorizontally(tween(300)) { direction * it / 4 } + fadeIn(tween(240)) + scaleIn(tween(300), initialScale = 0.97f)) togetherWith
+                        (slideOutHorizontally(tween(260)) { -direction * it / 5 } + fadeOut(tween(190)) + scaleOut(tween(260), targetScale = 0.98f))
+                },
+                label = "top-level-tab",
+            ) { tab ->
+                NavDisplay(
+                    backStack = navigator.stacks.getValue(tab),
+                    onBack = ::goBack,
+                    entryDecorators = decorators.getValue(tab),
+                    entryProvider = entries,
+                    modifier = Modifier.fillMaxSize(),
+                    transitionSpec = { slideInHorizontally { it / 4 } + fadeIn() togetherWith slideOutHorizontally { -it / 4 } + fadeOut() },
+                    popTransitionSpec = { slideInHorizontally { -it / 4 } + fadeIn() togetherWith slideOutHorizontally { it / 4 } + fadeOut() },
+                    predictivePopTransitionSpec = { slideInHorizontally { -it / 4 } + fadeIn() togetherWith slideOutHorizontally { it / 4 } + fadeOut() },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun FloatingTabBar(selected: TopLevelTab, onSelect: (TopLevelTab) -> Unit) {
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .navigationBarsPadding()
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+    ) {
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(32.dp),
+            color = androidx.compose.material3.MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.92f),
+            tonalElevation = 8.dp,
+            shadowElevation = 14.dp,
+        ) {
+            NavigationBar(
+                modifier = Modifier.height(72.dp),
+                containerColor = Color.Transparent,
+                tonalElevation = 0.dp,
+            ) {
+                TopLevelTab.entries.forEach { tab ->
+                    NavigationBarItem(
+                        selected = selected == tab,
+                        onClick = { onSelect(tab) },
+                        icon = { Icon(tab.icon(), contentDescription = null) },
+                        label = { Text(tab.label) },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = androidx.compose.material3.MaterialTheme.colorScheme.onPrimaryContainer,
+                            selectedTextColor = androidx.compose.material3.MaterialTheme.colorScheme.primary,
+                            indicatorColor = androidx.compose.material3.MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.92f),
+                            unselectedIconColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
+                            unselectedTextColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
+                        ),
+                    )
                 }
             }
-        },
-    ) { padding ->
-        AnimatedContent(
-            targetState = navigator.selectedTab,
-            modifier = Modifier.fillMaxSize().padding(padding),
-            transitionSpec = { fadeIn() togetherWith fadeOut() },
-            label = "top-level-tab",
-        ) { tab ->
-            NavDisplay(
-                backStack = navigator.stacks.getValue(tab),
-                onBack = ::goBack,
-                entryDecorators = decorators.getValue(tab),
-                entryProvider = entries,
-                modifier = Modifier.fillMaxSize(),
-                transitionSpec = { slideInHorizontally { it / 4 } + fadeIn() togetherWith slideOutHorizontally { -it / 4 } + fadeOut() },
-                popTransitionSpec = { slideInHorizontally { -it / 4 } + fadeIn() togetherWith slideOutHorizontally { it / 4 } + fadeOut() },
-                predictivePopTransitionSpec = { slideInHorizontally { -it / 4 } + fadeIn() togetherWith slideOutHorizontally { it / 4 } + fadeOut() },
-            )
         }
     }
 }
@@ -303,6 +358,7 @@ private fun AppTopBar(route: AppRoute, net: com.evolet.tachyon.net.NetState, com
     if (route.isTopLevel()) {
         TopAppBar(
             title = { if (route == CaptureRoute) Wordmark() else Text(route.title()) },
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
             actions = {
                 OfflineBadge(net, compute)
                 IconButton(onClick = onSettings) { Icon(TachyonIcons.Settings, contentDescription = "Settings") }
@@ -311,6 +367,7 @@ private fun AppTopBar(route: AppRoute, net: com.evolet.tachyon.net.NetState, com
     } else {
         TopAppBar(
             title = { Text(route.title()) },
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
             navigationIcon = { IconButton(onClick = onBack) { Icon(TachyonIcons.Back, contentDescription = "Back") } },
         )
     }
