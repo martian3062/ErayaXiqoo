@@ -27,6 +27,8 @@ sealed interface AgentEvent {
     data class OwnerDecision(val proposalId: String, val decision: Decision, val editedText: String? = null) : AgentEvent
     data class EngineDegraded(val engine: String, val reason: String) : AgentEvent
     data class DraftReady(val commitmentId: String, val text: String) : AgentEvent
+    /** F17 trait review: finalValue null = rejected; != proposedValue = edited. */
+    data class TraitDecision(val field: String, val evidence: String, val proposedValue: String, val finalValue: String?) : AgentEvent
     data class DraftEdited(val commitmentId: String, val prompt: String, val original: String, val edited: String) : AgentEvent
 }
 

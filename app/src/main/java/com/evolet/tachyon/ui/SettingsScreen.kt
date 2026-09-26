@@ -39,6 +39,7 @@ fun SettingsScreen(
     onBatterySettings: () -> Unit,
     onExportPrefs: (includeNames: Boolean) -> Unit,
     onDeleteTwin: () -> Unit,
+    onInterview: (demo: Boolean) -> Unit,
     personaSummary: String,
 ) {
     Column(
@@ -67,6 +68,8 @@ fun SettingsScreen(
 
         Section("Your twin")
         Hint("Profile: $personaSummary")
+        Button(onClick = { onInterview(true) }, modifier = Modifier.fillMaxWidth()) { Text("Get to know me (demo · 6 questions)") }
+        TextButton(onClick = { onInterview(false) }) { Text("Full interview (30 questions, ~30 min)") }
         OutlinedButton(onClick = { onExportPrefs(false) }, modifier = Modifier.fillMaxWidth()) { Text("Export for twin training (names redacted)") }
         TextButton(onClick = { onExportPrefs(true) }) { Text("Export including names") }
         OutlinedButton(onClick = onDeleteTwin, modifier = Modifier.fillMaxWidth()) { Text("Delete my twin") }

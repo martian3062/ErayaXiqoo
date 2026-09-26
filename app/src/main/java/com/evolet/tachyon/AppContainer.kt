@@ -52,6 +52,7 @@ class AppContainer(app: Application) {
 
     val confirmation = ConfirmationLoop(db.commitmentDao(), bus)
     val twin = TwinAgent(bus)
+    val interview = com.evolet.tachyon.twin.InterviewController(app, scope, engines, personaStore, bus)
     val learner = Learner(bus, db.commitmentDao()::get, db.preferenceDao()::insert).also { it.start(scope) }
     val session = SessionController(app, scope, engines, perceiver, planner, db, settings)
 }

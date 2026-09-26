@@ -1,0 +1,297 @@
+{
+  "sections": [
+    {
+      "id": 1,
+      "title": "About you",
+      "demo": true
+    },
+    {
+      "id": 2,
+      "title": "Your people",
+      "demo": false
+    },
+    {
+      "id": 3,
+      "title": "How you communicate",
+      "demo": true
+    },
+    {
+      "id": 4,
+      "title": "How you commit",
+      "demo": true
+    },
+    {
+      "id": 5,
+      "title": "Your day and energy",
+      "demo": false
+    },
+    {
+      "id": 6,
+      "title": "How you decide",
+      "demo": false
+    },
+    {
+      "id": 7,
+      "title": "What matters to you",
+      "demo": false
+    },
+    {
+      "id": 8,
+      "title": "How Tachyon should behave",
+      "demo": false
+    }
+  ],
+  "questions": [
+    {
+      "id": "q1",
+      "section": 1,
+      "demo": true,
+      "text": "What should I call you?",
+      "targets": [
+        "name"
+      ]
+    },
+    {
+      "id": "q2",
+      "section": 1,
+      "text": "What do you do on a normal weekday?",
+      "targets": [
+        "role"
+      ]
+    },
+    {
+      "id": "q3",
+      "section": 1,
+      "text": "Which languages do you use, and with whom?",
+      "targets": [
+        "languages"
+      ]
+    },
+    {
+      "id": "q4",
+      "section": 1,
+      "demo": true,
+      "text": "What are you working on most right now?",
+      "targets": [
+        "role",
+        "current_focus"
+      ],
+      "followup": "In one line, what is that project about?"
+    },
+    {
+      "id": "q5",
+      "section": 2,
+      "text": "Who do you talk to most for work? What's their role?",
+      "targets": [
+        "people"
+      ]
+    },
+    {
+      "id": "q6",
+      "section": 2,
+      "text": "Who do you talk to most outside work?",
+      "targets": [
+        "people"
+      ]
+    },
+    {
+      "id": "q7",
+      "section": 2,
+      "text": "Who do you make promises to most often?",
+      "targets": [
+        "people"
+      ]
+    },
+    {
+      "id": "q8",
+      "section": 2,
+      "text": "Is there anyone you're always extra formal with?",
+      "targets": [
+        "people"
+      ]
+    },
+    {
+      "id": "q9",
+      "section": 3,
+      "demo": true,
+      "text": "How would you usually reply to your manager saying \"Please send the update\"? Say it exactly.",
+      "targets": [
+        "style_examples_formal"
+      ]
+    },
+    {
+      "id": "q10",
+      "section": 3,
+      "demo": true,
+      "text": "And to a close friend asking the same? Say it exactly.",
+      "targets": [
+        "style_examples_casual"
+      ]
+    },
+    {
+      "id": "q11",
+      "section": 3,
+      "text": "Do you prefer calls, WhatsApp, or email for follow-ups?",
+      "targets": [
+        "channels"
+      ]
+    },
+    {
+      "id": "q12",
+      "section": 3,
+      "text": "How do you usually sign off a message?",
+      "targets": [
+        "sign_offs"
+      ]
+    },
+    {
+      "id": "q13",
+      "section": 4,
+      "text": "When someone asks for something, do you say yes quickly or think first?",
+      "targets": [
+        "commit_style"
+      ]
+    },
+    {
+      "id": "q14",
+      "section": 4,
+      "demo": true,
+      "text": "What kind of tasks do you usually underestimate?",
+      "targets": [
+        "underestimates"
+      ],
+      "followup": "Can you give one concrete example?"
+    },
+    {
+      "id": "q15",
+      "section": 4,
+      "demo": true,
+      "text": "How much time do you really need for a report or a document?",
+      "targets": [
+        "self_reported_durations"
+      ],
+      "followup": "Roughly how many hours or days does it really take you?"
+    },
+    {
+      "id": "q16",
+      "section": 4,
+      "text": "What do you do when you're going to miss a deadline?",
+      "targets": [
+        "slip_behaviour"
+      ]
+    },
+    {
+      "id": "q17",
+      "section": 5,
+      "text": "When are you sharpest in the day?",
+      "targets": [
+        "peak_hours"
+      ]
+    },
+    {
+      "id": "q18",
+      "section": 5,
+      "text": "When should I never remind you?",
+      "targets": [
+        "quiet_hours"
+      ],
+      "followup": "What time range should be quiet, like 10 pm to 8 am?"
+    },
+    {
+      "id": "q19",
+      "section": 5,
+      "text": "How many reminders before it gets annoying?",
+      "targets": [
+        "reminder_tolerance"
+      ]
+    },
+    {
+      "id": "q20",
+      "section": 5,
+      "text": "Weekends: do work reminders count?",
+      "targets": [
+        "weekend_policy"
+      ]
+    },
+    {
+      "id": "q21",
+      "section": 6,
+      "text": "When two tasks clash, what wins?",
+      "targets": [
+        "priorities"
+      ]
+    },
+    {
+      "id": "q22",
+      "section": 6,
+      "text": "What's a promise you'd never break?",
+      "targets": [
+        "non_negotiables"
+      ]
+    },
+    {
+      "id": "q23",
+      "section": 6,
+      "text": "What makes you say no to a request?",
+      "targets": [
+        "decline_rules"
+      ]
+    },
+    {
+      "id": "q24",
+      "section": 6,
+      "text": "Do you prefer a plan or figuring it out as you go?",
+      "targets": [
+        "planning_style"
+      ]
+    },
+    {
+      "id": "q25",
+      "section": 7,
+      "text": "What are you trying to achieve this year?",
+      "targets": [
+        "goals"
+      ]
+    },
+    {
+      "id": "q26",
+      "section": 7,
+      "text": "What does a good week look like for you?",
+      "targets": [
+        "good_week"
+      ]
+    },
+    {
+      "id": "q27",
+      "section": 7,
+      "text": "What do people rely on you for?",
+      "targets": [
+        "reliability_areas"
+      ]
+    },
+    {
+      "id": "q28",
+      "section": 8,
+      "text": "How blunt should I be when a deadline looks unrealistic?",
+      "targets": [
+        "assistant_tone"
+      ]
+    },
+    {
+      "id": "q29",
+      "section": 8,
+      "text": "Should drafts sound more formal or more like you normally talk?",
+      "targets": [
+        "draft_formality"
+      ]
+    },
+    {
+      "id": "q30",
+      "section": 8,
+      "text": "Anything I should never do or say on your behalf?",
+      "targets": [
+        "hard_limits"
+      ]
+    }
+  ]
+}

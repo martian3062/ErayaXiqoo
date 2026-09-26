@@ -37,8 +37,21 @@ class Learner(
                 if (e.edited.trim() == e.original.trim()) return
                 save(PreferencePair(UUID.randomUUID().toString(), Kind.DRAFT_EDIT, e.prompt, e.edited, e.original, now()))
             }
+            is AgentEvent.TraitDecision -> {
+                val prompt = "Trait '${e.field}' from the owner's words: \"${e.evidence}\""
+                val (chosen, rejected) = when {
+                    e.finalValue == null -> NO_TRAIT to e.proposedValue
+                    e.finalValue != e.proposedValue -> e.finalValue to e.proposedValue
+                    else -> e.finalValue to NO_TRAIT
+                }
+                save(PreferencePair(UUID.randomUUID().toString(), Kind.TRAIT_DECISION, prompt, chosen, rejected, now()))
+            }
             else -> Unit
         }
+    }
+
+    private companion object {
+        const val NO_TRAIT = "(no trait)"
     }
 
     /** Prompt = the evidence; chosen/rejected = whether it was a real commitment, as the model should answer. */

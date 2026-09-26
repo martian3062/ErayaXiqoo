@@ -75,6 +75,7 @@ fun TachyonRoot(container: AppContainer) {
     }.collectAsState(initial = emptyList())
 
     var tab by rememberSaveable { mutableStateOf(Tab.RECORD) }
+    val interviewUi by container.interview.ui.collectAsState()
     var draftFor by remember { mutableStateOf<com.evolet.tachyon.data.Commitment?>(null) }
     draftFor?.let { c -> DraftDialog(container, c, peopleList) { draftFor = null } }
     LaunchedEffect(ui.phase) { if (ui.phase == Phase.REVIEW) tab = Tab.RECORD }
@@ -122,6 +123,10 @@ fun TachyonRoot(container: AppContainer) {
             }
         },
     ) { padding ->
+        if (interviewUi.stage != com.evolet.tachyon.twin.Stage.IDLE) {
+            Box(Modifier.padding(padding)) { com.evolet.tachyon.ui.onboarding.InterviewScreen(container.interview) { } }
+            return@Scaffold
+        }
         AnimatedContent(tab, Modifier.padding(padding), transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "tab") { current ->
             when (current) {
                 Tab.RECORD -> if (ui.phase == Phase.REVIEW) {
@@ -183,6 +188,7 @@ fun TachyonRoot(container: AppContainer) {
                                 Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
                             }
                         },
+                        onInterview = { demo -> container.interview.start(demo) },
                         onDeleteTwin = {
                             scope.launch {
                                 val deleted = container.personaStore.wipe()
