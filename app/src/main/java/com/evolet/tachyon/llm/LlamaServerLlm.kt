@@ -45,7 +45,8 @@ class LlamaServerLlm(
         withContext(Dispatchers.IO) {
             val prompt = "<|im_start|>system\n$system<|im_end|>\n" +
                 "<|im_start|>user\n$user<|im_end|>\n" +
-                "<|im_start|>assistant\n"
+                "<|im_start|>assistant\n" +
+                NO_THINK
             val payload = buildJsonObject {
                 put("prompt", prompt)
                 put("n_predict", maxTokens)
@@ -72,6 +73,11 @@ class LlamaServerLlm(
         }
 
     override fun close() = Unit
+
+    private companion object {
+        /** Empty think block = Qwen3 non-thinking mode. Measured on the iQOO 15: fixes empty outputs on real ASR text. */
+        const val NO_THINK = "<think>\n\n</think>\n\n"
+    }
 
     /** "/models/qwen3.5-2b-q4_0.gguf" -> "qwen3.5-2b-q4_0" for the latency badge. */
     private fun fetchModelLabel(): String? =

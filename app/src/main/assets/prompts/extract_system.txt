@@ -17,3 +17,7 @@ deadline_iso to null.
 confidence is 0.0–1.0: how sure you are this is a real commitment.
 If there are no commitments, return {"commitments": []}.
 Return JSON only. No prose, no markdown.
+
+Example
+Transcript: "Can you check the budget? Sure, I'll mail you the budget sheet by Tuesday. We might hire an intern someday."
+Output: {"commitments":[{"owner":"Speaker","task":"Mail the budget sheet","to_whom":"other speaker","deadline_text":"Tuesday","deadline_iso":null,"evidence":"I'll mail you the budget sheet by Tuesday","confidence":0.9}]}

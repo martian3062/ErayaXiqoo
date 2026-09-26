@@ -150,7 +150,13 @@ class SessionController(
         val asr = engines.asr()
         val hint = settings.state.value.language.takeUnless { it == LANG_AUTO }
         try {
-            val r = asr.transcribe(pcm, hint)
+            // One retry: losing a chunk silently drops 30 s of speech (seen on-device when whisper-server restarted).
+            val r = try {
+                asr.transcribe(pcm, hint)
+            } catch (e: java.io.IOException) {
+                Log.w(TAG, "ASR chunk failed, retrying once", e)
+                asr.transcribe(pcm, hint)
+            }
             _ui.update {
                 it.copy(
                     transcript = if (r.text.isBlank()) it.transcript else it.transcript + r.text,

@@ -26,7 +26,7 @@ object LocalHttp {
             .connectTimeout(2, TimeUnit.SECONDS)
             .readTimeout(180, TimeUnit.SECONDS)
             .writeTimeout(60, TimeUnit.SECONDS)
-            .retryOnConnectionFailure(false)
+            .retryOnConnectionFailure(true) // a restarted Termux server leaves stale pooled connections
             .build()
     }
 }

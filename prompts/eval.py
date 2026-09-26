@@ -55,7 +55,8 @@ def system_prompt(path, today):
 
 def complete(server, system, user, schema, max_tokens=512):
     prompt = (f"<|im_start|>system\n{system}<|im_end|>\n"
-              f"<|im_start|>user\n{user}<|im_end|>\n<|im_start|>assistant\n")
+              f"<|im_start|>user\n{user}<|im_end|>\n<|im_start|>assistant\n"
+              "<think>\n\n</think>\n\n")  # Qwen3 non-thinking mode, same as the app
     body = json.dumps({"prompt": prompt, "n_predict": max_tokens, "temperature": 0.1,
                        "cache_prompt": True, "json_schema": schema}).encode()
     req = urllib.request.Request(server.rstrip("/") + "/completion", data=body,
