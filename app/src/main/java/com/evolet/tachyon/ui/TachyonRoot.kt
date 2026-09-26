@@ -106,7 +106,7 @@ fun TachyonRoot(container: AppContainer) {
                 Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text("Tachyon", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                com.evolet.tachyon.ui.components.Wordmark(Modifier.weight(1f))
                 OfflineBadge(net, compute)
             }
         },
