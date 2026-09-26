@@ -57,7 +57,7 @@ fun ProposalsScreen(
             )
             if (ui.dropped > 0) {
                 Text(
-                    "${ui.dropped} dropped: evidence not in transcript or low confidence",
+                    "${ui.dropped} dropped by the checks (evidence, hedge words, verifier)",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
