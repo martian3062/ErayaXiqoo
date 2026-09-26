@@ -75,6 +75,8 @@ fun TachyonRoot(container: AppContainer) {
     }.collectAsState(initial = emptyList())
 
     var tab by rememberSaveable { mutableStateOf(Tab.RECORD) }
+    var draftFor by remember { mutableStateOf<com.evolet.tachyon.data.Commitment?>(null) }
+    draftFor?.let { c -> DraftDialog(container, c, peopleList) { draftFor = null } }
     LaunchedEffect(ui.phase) { if (ui.phase == Phase.REVIEW) tab = Tab.RECORD }
 
     // Mic + notification permission on first launch, and again on tap if it was denied.
@@ -149,9 +151,13 @@ fun TachyonRoot(container: AppContainer) {
                         onOpenTermux = { openTermux(context) },
                     )
                 }
-                Tab.TASKS -> TasksScreen(accepted, people) { c ->
-                    if (!CalendarBridge.open(context, c)) Toast.makeText(context, "No calendar app found", Toast.LENGTH_SHORT).show()
-                }
+                Tab.TASKS -> TasksScreen(
+                    accepted, people,
+                    onAddToCalendar = { c ->
+                        if (!CalendarBridge.open(context, c)) Toast.makeText(context, "No calendar app found", Toast.LENGTH_SHORT).show()
+                    },
+                    onDraft = { draftFor = it },
+                )
                 Tab.SETTINGS -> {
                     val modelsDir = context.getExternalFilesDir("models")
                     SettingsScreen(
@@ -167,6 +173,24 @@ fun TachyonRoot(container: AppContainer) {
                         },
                         onOpenTermux = { openTermux(context) },
                         onBatterySettings = { openBatterySettings(context) },
+                        onExportPrefs = { includeNames ->
+                            scope.launch {
+                                val msg = runCatching {
+                                    val pairs = container.db.preferenceDao().all()
+                                    val jsonl = com.evolet.tachyon.trust.TrustPolicy.exportJsonl(pairs, peopleList, includeNames)
+                                    "Exported ${pairs.count { it.rejected != null }} pairs to " + com.evolet.tachyon.export.PrefExporter.write(context, jsonl)
+                                }.getOrElse { "Export failed: ${it.message}" }
+                                Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                            }
+                        },
+                        onDeleteTwin = {
+                            scope.launch {
+                                val deleted = container.personaStore.wipe()
+                                container.db.preferenceDao().clear()
+                                Toast.makeText(context, "Deleted twin data: ${deleted.joinToString().ifEmpty { "nothing stored" }} + preference pairs", Toast.LENGTH_LONG).show()
+                            }
+                        },
+                        personaSummary = container.personaStore.persona.value.let { p -> "${p.owner.name} · ${p.style.rules.size} style rules · ${p.style.examples.size} examples · ${p.traits.size} traits" },
                     )
                 }
             }

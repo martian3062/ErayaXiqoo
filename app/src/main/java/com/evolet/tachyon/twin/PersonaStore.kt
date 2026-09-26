@@ -19,6 +19,10 @@ class PersonaStore(private val context: Context) {
     private val personaFile get() = File(dir, "persona.json")
     private val peopleFile get() = File(dir, "people.json")
 
+    init {
+        importIfPresent()
+    }
+
     private val _persona = MutableStateFlow(loadPersona())
     val persona: StateFlow<Persona> = _persona.asStateFlow()
 
@@ -47,6 +51,21 @@ class PersonaStore(private val context: Context) {
     }
 
     fun reseedDemoPeople() = savePeople(readDemoPeople())
+
+    /**
+     * One-shot import for the owner's own persona/people (pushed over adb to the app's external
+     * files/twin_import/). Moved into internal storage and the external copy deleted, so nothing
+     * personal stays in shared storage.
+     */
+    private fun importIfPresent() {
+        val inbox = context.getExternalFilesDir("twin_import") ?: return
+        for (name in listOf("persona.json", "people.json")) {
+            val src = java.io.File(inbox, name)
+            if (!src.isFile) continue
+            runCatching { java.io.File(dir, name).writeText(src.readText()) }
+            src.delete()
+        }
+    }
 
     private fun loadPersona(): Persona =
         runCatching { json.decodeFromString(Persona.serializer(), personaFile.readText()) }.getOrDefault(Persona())

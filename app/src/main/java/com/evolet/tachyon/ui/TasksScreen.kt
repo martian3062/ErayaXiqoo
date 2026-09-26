@@ -30,7 +30,12 @@ import java.time.LocalDate
 
 /** Accepted commitments only (F5), grouped by when they're due, each with "Add to calendar" (F6). */
 @Composable
-fun TasksScreen(items: List<Commitment>, people: Map<String, Person>, onAddToCalendar: (Commitment) -> Unit) {
+fun TasksScreen(
+    items: List<Commitment>,
+    people: Map<String, Person>,
+    onAddToCalendar: (Commitment) -> Unit,
+    onDraft: (Commitment) -> Unit,
+) {
     if (items.isEmpty()) {
         Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.Center) {
             Text("No confirmed commitments yet", style = MaterialTheme.typography.headlineSmall)
@@ -48,14 +53,14 @@ fun TasksScreen(items: List<Commitment>, people: Map<String, Person>, onAddToCal
             item(key = "h$group") {
                 Text(group.label, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 12.dp))
             }
-            items(list, key = { it.id }) { c -> TaskCard(c, people, onAddToCalendar) }
+            items(list, key = { it.id }) { c -> TaskCard(c, people, onAddToCalendar, onDraft) }
         }
         item { Spacer(Modifier.height(16.dp)) }
     }
 }
 
 @Composable
-private fun TaskCard(c: Commitment, people: Map<String, Person>, onAddToCalendar: (Commitment) -> Unit) {
+private fun TaskCard(c: Commitment, people: Map<String, Person>, onAddToCalendar: (Commitment) -> Unit, onDraft: (Commitment) -> Unit) {
     val to = c.toPersonId?.let { people[it] }
     ElevatedCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -64,11 +69,12 @@ private fun TaskCard(c: Commitment, people: Map<String, Person>, onAddToCalendar
             Text("⏰ ${deadlineLabel(c)}", style = MaterialTheme.typography.bodyMedium)
             if (c.riskNote != null) RiskChip(c.riskNote)
             Text("“${c.evidence}”", style = MaterialTheme.typography.bodySmall, fontStyle = FontStyle.Italic, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilledTonalButton(onClick = { onAddToCalendar(c) }) {
                     Icon(TachyonIcons.Event, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Text(" Add to calendar")
+                    Text(" Calendar")
                 }
+                FilledTonalButton(onClick = { onDraft(c) }) { Text("✍ Draft follow-up") }
             }
         }
     }

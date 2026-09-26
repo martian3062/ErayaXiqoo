@@ -14,6 +14,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -36,6 +37,9 @@ fun SettingsScreen(
     onUseSample: () -> Unit,
     onOpenTermux: () -> Unit,
     onBatterySettings: () -> Unit,
+    onExportPrefs: (includeNames: Boolean) -> Unit,
+    onDeleteTwin: () -> Unit,
+    personaSummary: String,
 ) {
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
@@ -60,6 +64,13 @@ fun SettingsScreen(
         OutlinedButton(onClick = onOpenTermux, modifier = Modifier.fillMaxWidth()) { Text("Open Termux (restart servers)") }
         OutlinedButton(onClick = onBatterySettings, modifier = Modifier.fillMaxWidth()) { Text("Battery: allow background activity") }
         Hint("OriginOS kills background apps. Set Tachyon and Termux to \"no restrictions\".")
+
+        Section("Your twin")
+        Hint("Profile: $personaSummary")
+        OutlinedButton(onClick = { onExportPrefs(false) }, modifier = Modifier.fillMaxWidth()) { Text("Export for twin training (names redacted)") }
+        TextButton(onClick = { onExportPrefs(true) }) { Text("Export including names") }
+        OutlinedButton(onClick = onDeleteTwin, modifier = Modifier.fillMaxWidth()) { Text("Delete my twin") }
+        Hint("Delete wipes persona, people and preference pairs from this phone.")
 
         Section("Files on this phone")
         Hint("Models: $modelsDir")

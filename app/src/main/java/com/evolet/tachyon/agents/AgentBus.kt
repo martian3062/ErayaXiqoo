@@ -26,6 +26,8 @@ sealed interface AgentEvent {
     data class ProposalsReady(val sessionId: String, val items: List<Proposal>) : AgentEvent
     data class OwnerDecision(val proposalId: String, val decision: Decision, val editedText: String? = null) : AgentEvent
     data class EngineDegraded(val engine: String, val reason: String) : AgentEvent
+    data class DraftReady(val commitmentId: String, val text: String) : AgentEvent
+    data class DraftEdited(val commitmentId: String, val prompt: String, val original: String, val edited: String) : AgentEvent
 }
 
 class AgentBus {

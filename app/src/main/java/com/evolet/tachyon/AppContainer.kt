@@ -4,7 +4,9 @@ import android.app.Application
 import com.evolet.tachyon.agents.AgentBus
 import com.evolet.tachyon.agents.Perceiver
 import com.evolet.tachyon.agents.Planner
+import com.evolet.tachyon.agents.Learner
 import com.evolet.tachyon.agents.Recoverer
+import com.evolet.tachyon.agents.TwinAgent
 import com.evolet.tachyon.agents.Verifier
 import com.evolet.tachyon.data.AppDb
 import com.evolet.tachyon.data.AppSettings
@@ -49,5 +51,7 @@ class AppContainer(app: Application) {
     val recoverer = Recoverer(bus, engines::retry).also { it.start(scope) }
 
     val confirmation = ConfirmationLoop(db.commitmentDao(), bus)
+    val twin = TwinAgent(bus)
+    val learner = Learner(bus, db.commitmentDao()::get, db.preferenceDao()::insert).also { it.start(scope) }
     val session = SessionController(app, scope, engines, perceiver, planner, db, settings)
 }

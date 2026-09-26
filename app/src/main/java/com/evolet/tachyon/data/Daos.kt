@@ -17,6 +17,9 @@ interface CommitmentDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(items: List<Commitment>)
 
+    @Query("SELECT * FROM Commitment WHERE id = :id")
+    suspend fun get(id: String): Commitment?
+
     @Query("SELECT * FROM Commitment WHERE sessionId = :sessionId ORDER BY confidence DESC")
     fun observeSession(sessionId: String): Flow<List<Commitment>>
 
