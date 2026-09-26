@@ -10,6 +10,12 @@ import kotlinx.coroutines.flow.Flow
 interface SessionDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(session: Session)
+
+    @Query("SELECT * FROM Session ORDER BY startedAt DESC")
+    fun observeAll(): Flow<List<Session>>
+
+    @Query("SELECT * FROM Session WHERE id = :id")
+    fun observe(id: String): Flow<Session?>
 }
 
 @Dao
@@ -19,6 +25,9 @@ interface CommitmentDao {
 
     @Query("SELECT * FROM Commitment WHERE id = :id")
     suspend fun get(id: String): Commitment?
+
+    @Query("SELECT * FROM Commitment WHERE id = :id")
+    fun observeById(id: String): Flow<Commitment?>
 
     @Query("SELECT * FROM Commitment WHERE sessionId = :sessionId ORDER BY confidence DESC")
     fun observeSession(sessionId: String): Flow<List<Commitment>>

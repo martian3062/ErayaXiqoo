@@ -156,7 +156,7 @@ Do all of these for **both Tachyon and Termux**:
 - [ ] **Lock in recents:** open the recent-apps view, then long-press or pull down on the app card and tap the 🔒 lock
 - [ ] **Pause app activity if unused:** off (long-press the app icon → App info)
 
-Tachyon's **Settings → Battery** button opens the right screen.
+Tachyon's top-right gear → **Demo tools** → **Allow background activity** opens the right screen.
 
 ## 11. Smoke test
 
@@ -165,7 +165,7 @@ Tachyon's **Settings → Battery** button opens the right screen.
    - `LLM llama.cpp·CPU·qwen3.5-2b-q4_0`
 2. Tap 🎙️, read the demo script (`demo/script_en_hi.md`) out loud, then tap ⏹.
 3. You should get **3 proposals**, each with an evidence quote.
-4. ✓ ✓ ✗ → the **Tasks** tab shows 2 items → *Add to calendar* opens the calendar pre-filled.
+4. ✓ ✓ ✗ → the **Tasks** tab shows 2 items. Open one → *Calendar* opens the calendar pre-filled.
 
 ## 12. Airplane-mode test
 
@@ -181,7 +181,7 @@ Tachyon's **Settings → Battery** button opens the right screen.
 - [ ] Screen timeout → 10 min (🔍 `screen timeout`)
 - [ ] Brightness up, font size normal
 - [ ] Termux servers running, Tachyon shows ● ready
-- [ ] Backup ready: **Settings → Use sample recording** works
+- [ ] Backup ready: top-right gear → **Demo tools** → **Use sample recording** works
 - [ ] Airplane mode ON, on camera
 
 ---
@@ -204,4 +204,4 @@ Run it again. It skips the parts already done.
 `ls -lh ~/models`, then delete any extra `.gguf` files.
 
 **Live mic fails on stage**
-Settings → **Use sample recording**. It runs the same pipeline on a saved WAV.
+Top-right gear → **Demo tools** → **Use sample recording**. It runs the same pipeline on a saved WAV.

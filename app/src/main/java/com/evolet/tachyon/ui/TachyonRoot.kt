@@ -7,80 +7,96 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.provider.Settings
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
+import androidx.navigation3.ui.NavDisplay
 import com.evolet.tachyon.AppContainer
 import com.evolet.tachyon.audio.SampleAudio
 import com.evolet.tachyon.calendar.CalendarBridge
+import com.evolet.tachyon.data.Commitment
 import com.evolet.tachyon.data.Status
 import com.evolet.tachyon.data.Tier
 import com.evolet.tachyon.session.Phase
+import com.evolet.tachyon.twin.Stage
 import com.evolet.tachyon.ui.components.OfflineBadge
 import com.evolet.tachyon.ui.components.TachyonIcons
-import kotlinx.coroutines.flow.emptyFlow
+import com.evolet.tachyon.ui.components.Wordmark
+import com.evolet.tachyon.ui.navigation.AboutRoute
+import com.evolet.tachyon.ui.navigation.AppRoute
+import com.evolet.tachyon.ui.navigation.CaptureRoute
+import com.evolet.tachyon.ui.navigation.DemoToolsRoute
+import com.evolet.tachyon.ui.navigation.EnginesRoute
+import com.evolet.tachyon.ui.navigation.InterviewRoute
+import com.evolet.tachyon.ui.navigation.LanguageRoute
+import com.evolet.tachyon.ui.navigation.PeopleRoute
+import com.evolet.tachyon.ui.navigation.PrivacyRoute
+import com.evolet.tachyon.ui.navigation.ProfileRoute
+import com.evolet.tachyon.ui.navigation.RemindersRoute
+import com.evolet.tachyon.ui.navigation.ReviewRoute
+import com.evolet.tachyon.ui.navigation.SessionDetailRoute
+import com.evolet.tachyon.ui.navigation.SessionsRoute
+import com.evolet.tachyon.ui.navigation.SettingsRoute
+import com.evolet.tachyon.ui.navigation.TaskDetailRoute
+import com.evolet.tachyon.ui.navigation.TasksRoute
+import com.evolet.tachyon.ui.navigation.TopLevelTab
+import com.evolet.tachyon.ui.navigation.YouRoute
+import com.evolet.tachyon.ui.navigation.isTopLevel
+import com.evolet.tachyon.ui.navigation.rememberTachyonNavigator
+import com.evolet.tachyon.ui.navigation.title
 import kotlinx.coroutines.launch
 
-private enum class Tab(val label: String, val icon: ImageVector) {
-    RECORD("Record", TachyonIcons.Mic),
-    TASKS("Tasks", TachyonIcons.List),
-    SETTINGS("Settings", TachyonIcons.Sliders),
-}
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TachyonRoot(container: AppContainer) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val navigator = rememberTachyonNavigator()
 
     val ui by container.session.ui.collectAsState()
     val level by container.session.level.collectAsState()
     val peopleList by container.personaStore.people.collectAsState()
+    val persona by container.personaStore.persona.collectAsState()
     val people = remember(peopleList) { peopleList.associateBy { it.id } }
     val engines by container.engines.status.collectAsState()
     val settings by container.settings.state.collectAsState()
     val net by container.connectivity.state.collectAsState(initial = container.connectivity.snapshot())
     val accepted by remember { container.db.commitmentDao().observeByStatus(Status.ACCEPTED) }.collectAsState(initial = emptyList())
-    val sessionItems by remember(ui.sessionId) {
-        ui.sessionId?.let { container.db.commitmentDao().observeSession(it) } ?: emptyFlow()
-    }.collectAsState(initial = emptyList())
+    val sessions by remember { container.db.sessionDao().observeAll() }.collectAsState(initial = emptyList())
 
-    var tab by rememberSaveable { mutableStateOf(Tab.RECORD) }
-    val interviewUi by container.interview.ui.collectAsState()
-    var draftFor by remember { mutableStateOf<com.evolet.tachyon.data.Commitment?>(null) }
-    draftFor?.let { c -> DraftDialog(container, c, peopleList) { draftFor = null } }
-    LaunchedEffect(ui.phase) { if (ui.phase == Phase.REVIEW) tab = Tab.RECORD }
+    var draftFor by remember { mutableStateOf<Commitment?>(null) }
+    draftFor?.let { commitment -> DraftDialog(container, commitment, peopleList) { draftFor = null } }
 
-    // Mic + notification permission on first launch, and again on tap if it was denied.
     val permissions = remember {
         buildList {
             add(Manifest.permission.RECORD_AUDIO)
@@ -93,132 +109,249 @@ fun TachyonRoot(container: AppContainer) {
         }
     }
     LaunchedEffect(Unit) { if (!micGranted(context)) launcher.launch(permissions) }
+    LaunchedEffect(ui.phase, ui.sessionId) {
+        if (ui.phase == Phase.REVIEW && ui.sessionId != null) {
+            navigator.navigateIn(TopLevelTab.CAPTURE, ReviewRoute(ui.sessionId!!))
+        }
+    }
 
     val compute = when {
         settings.asrTier == Tier.NPU && settings.llmTier == Tier.NPU -> "NPU"
         settings.asrTier == Tier.NPU || settings.llmTier == Tier.NPU -> "NPU+CPU"
         else -> "CPU"
     }
+    val modelsDir = context.getExternalFilesDir("models")
+    val modelFiles = remember(modelsDir?.path, navigator.currentRoute) { modelsDir?.list()?.sorted().orEmpty() }
 
+    fun exportPrefs(includeNames: Boolean) {
+        scope.launch {
+            val message = runCatching {
+                val pairs = container.db.preferenceDao().all()
+                val jsonl = com.evolet.tachyon.trust.TrustPolicy.exportJsonl(pairs, peopleList, includeNames)
+                "Exported ${pairs.count { it.rejected != null }} pairs to ${com.evolet.tachyon.export.PrefExporter.write(context, jsonl)}"
+            }.getOrElse { "Export failed: ${it.message}" }
+            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    fun deleteTwin() {
+        scope.launch {
+            val deleted = container.personaStore.wipe()
+            container.db.preferenceDao().clear()
+            Toast.makeText(context, "Deleted twin data: ${deleted.joinToString().ifEmpty { "nothing stored" }} + preference pairs", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    fun goBack() {
+        when (navigator.currentRoute) {
+            is ReviewRoute -> container.session.reset()
+            is InterviewRoute -> container.interview.cancel()
+            else -> Unit
+        }
+        navigator.back()
+    }
+
+    BackHandler(enabled = navigator.activeStack.size == 1 && navigator.selectedTab != TopLevelTab.CAPTURE) {
+        navigator.select(TopLevelTab.CAPTURE)
+    }
+
+    val captureDecorators = listOf(rememberSaveableStateHolderNavEntryDecorator<AppRoute>())
+    val sessionDecorators = listOf(rememberSaveableStateHolderNavEntryDecorator<AppRoute>())
+    val taskDecorators = listOf(rememberSaveableStateHolderNavEntryDecorator<AppRoute>())
+    val youDecorators = listOf(rememberSaveableStateHolderNavEntryDecorator<AppRoute>())
+    val decorators = remember(captureDecorators, sessionDecorators, taskDecorators, youDecorators) {
+        mapOf(
+            TopLevelTab.CAPTURE to captureDecorators,
+            TopLevelTab.SESSIONS to sessionDecorators,
+            TopLevelTab.TASKS to taskDecorators,
+            TopLevelTab.YOU to youDecorators,
+        )
+    }
+
+    val entries = entryProvider {
+        entry<CaptureRoute> {
+            RecordScreen(
+                ui, level, engines,
+                onStart = { if (micGranted(context)) container.session.startRecording() else launcher.launch(permissions) },
+                onStop = container.session::stopRecording,
+                onRetryExtraction = container.session::retryExtraction,
+                onRetryEngines = container.engines::retry,
+                onOpenTermux = { openTermux(context) },
+            )
+        }
+        entry<ReviewRoute> { route ->
+            val items by remember(route.sessionId) { container.db.commitmentDao().observeSession(route.sessionId) }.collectAsState(initial = emptyList())
+            ProposalsScreen(
+                ui, items, people,
+                onAccept = { id -> scope.launch { container.confirmation.accept(id) } },
+                onReject = { id -> scope.launch { container.confirmation.reject(id) } },
+                onUndo = { id -> scope.launch { container.confirmation.undo(id) } },
+                onDone = {
+                    container.session.reset()
+                    navigator.reset(TopLevelTab.CAPTURE)
+                    navigator.select(TopLevelTab.TASKS)
+                },
+            )
+        }
+        entry<SessionsRoute> { SessionsScreen(sessions) { navigator.navigate(SessionDetailRoute(it.id)) } }
+        entry<SessionDetailRoute> { route -> SessionDetailDestination(container, route, people) }
+        entry<TasksRoute> { TasksScreen(accepted, people) { navigator.navigate(TaskDetailRoute(it.id)) } }
+        entry<TaskDetailRoute> { route ->
+            TaskDetailDestination(container, route, people, onCalendar = { openCalendar(context, it) }, onDraft = { draftFor = it })
+        }
+        entry<YouRoute> {
+            YouScreen(
+                persona, peopleList,
+                onProfile = { navigator.navigate(ProfileRoute) },
+                onPeople = { navigator.navigate(PeopleRoute) },
+                onInterview = { navigator.navigate(InterviewRoute(it)) },
+                onPrivacy = { navigator.navigate(PrivacyRoute) },
+            )
+        }
+        entry<ProfileRoute> {
+            ProfileScreen(persona) { index ->
+                if (index in persona.traits.indices) container.personaStore.savePersona(persona.copy(traits = persona.traits.filterIndexed { i, _ -> i != index }))
+            }
+        }
+        entry<PeopleRoute> { PeopleScreen(peopleList, container.personaStore::savePeople) }
+        entry<PrivacyRoute> { PrivacyScreen(persona, peopleList.size, ::exportPrefs, ::deleteTwin) }
+        entry<InterviewRoute> { route ->
+            LaunchedEffect(route) { if (container.interview.ui.value.stage == Stage.IDLE) container.interview.start(route.demo) }
+            com.evolet.tachyon.ui.onboarding.InterviewScreen(container.interview) { navigator.back() }
+        }
+        entry<SettingsRoute> {
+            SettingsHomeScreen(
+                settings,
+                onEngines = { navigator.navigate(EnginesRoute) },
+                onLanguage = { navigator.navigate(LanguageRoute) },
+                onReminders = { navigator.navigate(RemindersRoute) },
+                onDemoTools = { navigator.navigate(DemoToolsRoute) },
+                onAbout = { navigator.navigate(AboutRoute) },
+            )
+        }
+        entry<EnginesRoute> { EnginesSettingsScreen(settings, engines, container.settings::update, modelsDir?.path ?: "(storage unavailable)", modelFiles) { openTermux(context) } }
+        entry<LanguageRoute> { LanguageSettingsScreen(settings, container.settings::update) }
+        entry<RemindersRoute> {
+            ReminderSettingsScreen(settings, container.settings::update) {
+                val latest = accepted.firstOrNull()
+                if (latest == null) Toast.makeText(context, "Accept a task first", Toast.LENGTH_SHORT).show()
+                else {
+                    container.reminders.fireSoon(latest)
+                    Toast.makeText(context, "Reminder in about 3 seconds: ${latest.task}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+        entry<DemoToolsRoute> {
+            DemoToolsScreen(
+                sampleWavPath = SampleAudio.externalFile(context)?.path ?: SampleAudio.FILE_NAME,
+                promptsDir = container.prompts.overrideDir?.path ?: "(storage unavailable)",
+                onUseSample = {
+                    navigator.reset(TopLevelTab.CAPTURE)
+                    navigator.select(TopLevelTab.CAPTURE)
+                    container.session.runSample()
+                },
+                onOpenTermux = { openTermux(context) },
+                onBatterySettings = { openBatterySettings(context) },
+            )
+        }
+        entry<AboutRoute> { AboutScreen() }
+    }
+
+    val interviewVisible = navigator.currentRoute is InterviewRoute
     Scaffold(
         topBar = {
-            Row(
-                Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                com.evolet.tachyon.ui.components.Wordmark(Modifier.weight(1f))
-                OfflineBadge(net, compute)
-            }
+            if (!interviewVisible) AppTopBar(navigator.currentRoute, net, compute, onBack = ::goBack, onSettings = { navigator.navigate(SettingsRoute) })
         },
         bottomBar = {
-            NavigationBar {
-                Tab.entries.forEach { t ->
-                    NavigationBarItem(
-                        selected = tab == t,
-                        onClick = { tab = t },
-                        icon = { Icon(t.icon, contentDescription = null) },
-                        label = { Text(t.label) },
-                    )
+            if (!interviewVisible) {
+                NavigationBar {
+                    TopLevelTab.entries.forEach { tab ->
+                        NavigationBarItem(
+                            selected = navigator.selectedTab == tab,
+                            onClick = { if (navigator.selectedTab == tab) navigator.reset(tab) else navigator.select(tab) },
+                            icon = { Icon(tab.icon(), contentDescription = null) },
+                            label = { Text(tab.label) },
+                        )
+                    }
                 }
             }
         },
     ) { padding ->
-        if (interviewUi.stage != com.evolet.tachyon.twin.Stage.IDLE) {
-            Box(Modifier.padding(padding)) { com.evolet.tachyon.ui.onboarding.InterviewScreen(container.interview) { } }
-            return@Scaffold
-        }
-        AnimatedContent(tab, Modifier.padding(padding), transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "tab") { current ->
-            when (current) {
-                Tab.RECORD -> if (ui.phase == Phase.REVIEW) {
-                    ProposalsScreen(
-                        ui = ui,
-                        items = sessionItems,
-                        people = people,
-                        onAccept = { id -> scope.launch { container.confirmation.accept(id) } },
-                        onReject = { id -> scope.launch { container.confirmation.reject(id) } },
-                        onUndo = { id -> scope.launch { container.confirmation.undo(id) } },
-                        onDone = {
-                            container.session.reset()
-                            tab = Tab.TASKS
-                        },
-                    )
-                } else {
-                    RecordScreen(
-                        ui = ui,
-                        level = level,
-                        engines = engines,
-                        onStart = {
-                            if (micGranted(context)) container.session.startRecording() else launcher.launch(permissions)
-                        },
-                        onStop = { container.session.stopRecording() },
-                        onRetryExtraction = { container.session.retryExtraction() },
-                        onRetryEngines = { container.engines.retry() },
-                        onOpenTermux = { openTermux(context) },
-                    )
-                }
-                Tab.TASKS -> TasksScreen(
-                    accepted, people,
-                    onAddToCalendar = { c ->
-                        if (!CalendarBridge.open(context, c)) Toast.makeText(context, "No calendar app found", Toast.LENGTH_SHORT).show()
-                    },
-                    onDraft = { draftFor = it },
-                )
-                Tab.SETTINGS -> {
-                    val modelsDir = context.getExternalFilesDir("models")
-                    SettingsScreen(
-                        settings = settings,
-                        onChange = container.settings::update,
-                        modelsDir = modelsDir?.path ?: "(storage unavailable)",
-                        modelFiles = remember(tab) { modelsDir?.list()?.sorted().orEmpty() },
-                        promptsDir = container.prompts.overrideDir?.path ?: "(storage unavailable)",
-                        sampleWavPath = SampleAudio.externalFile(context)?.path ?: SampleAudio.FILE_NAME,
-                        onUseSample = {
-                            container.session.runSample()
-                            tab = Tab.RECORD
-                        },
-                        onOpenTermux = { openTermux(context) },
-                        onBatterySettings = { openBatterySettings(context) },
-                        onExportPrefs = { includeNames ->
-                            scope.launch {
-                                val msg = runCatching {
-                                    val pairs = container.db.preferenceDao().all()
-                                    val jsonl = com.evolet.tachyon.trust.TrustPolicy.exportJsonl(pairs, peopleList, includeNames)
-                                    "Exported ${pairs.count { it.rejected != null }} pairs to " + com.evolet.tachyon.export.PrefExporter.write(context, jsonl)
-                                }.getOrElse { "Export failed: ${it.message}" }
-                                Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
-                            }
-                        },
-                        onInterview = { demo -> container.interview.start(demo) },
-                        onTestReminder = {
-                            val latest = accepted.firstOrNull()
-                            if (latest == null) Toast.makeText(context, "Accept a task first", Toast.LENGTH_SHORT).show()
-                            else {
-                                container.reminders.fireSoon(latest)
-                                Toast.makeText(context, "Reminder in ~3 s: ${latest.task}", Toast.LENGTH_SHORT).show()
-                            }
-                        },
-                        onDeleteTwin = {
-                            scope.launch {
-                                val deleted = container.personaStore.wipe()
-                                container.db.preferenceDao().clear()
-                                Toast.makeText(context, "Deleted twin data: ${deleted.joinToString().ifEmpty { "nothing stored" }} + preference pairs", Toast.LENGTH_LONG).show()
-                            }
-                        },
-                        personaSummary = container.personaStore.persona.value.let { p -> "${p.owner.name} · ${p.style.rules.size} style rules · ${p.style.examples.size} examples · ${p.traits.size} traits" },
-                    )
-                }
-            }
+        AnimatedContent(
+            targetState = navigator.selectedTab,
+            modifier = Modifier.fillMaxSize().padding(padding),
+            transitionSpec = { fadeIn() togetherWith fadeOut() },
+            label = "top-level-tab",
+        ) { tab ->
+            NavDisplay(
+                backStack = navigator.stacks.getValue(tab),
+                onBack = ::goBack,
+                entryDecorators = decorators.getValue(tab),
+                entryProvider = entries,
+                modifier = Modifier.fillMaxSize(),
+                transitionSpec = { slideInHorizontally { it / 4 } + fadeIn() togetherWith slideOutHorizontally { -it / 4 } + fadeOut() },
+                popTransitionSpec = { slideInHorizontally { -it / 4 } + fadeIn() togetherWith slideOutHorizontally { it / 4 } + fadeOut() },
+                predictivePopTransitionSpec = { slideInHorizontally { -it / 4 } + fadeIn() togetherWith slideOutHorizontally { it / 4 } + fadeOut() },
+            )
         }
     }
 }
 
-private fun micGranted(context: Context) =
-    ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AppTopBar(route: AppRoute, net: com.evolet.tachyon.net.NetState, compute: String, onBack: () -> Unit, onSettings: () -> Unit) {
+    if (route.isTopLevel()) {
+        TopAppBar(
+            title = { if (route == CaptureRoute) Wordmark() else Text(route.title()) },
+            actions = {
+                OfflineBadge(net, compute)
+                IconButton(onClick = onSettings) { Icon(TachyonIcons.Settings, contentDescription = "Settings") }
+            },
+        )
+    } else {
+        TopAppBar(
+            title = { Text(route.title()) },
+            navigationIcon = { IconButton(onClick = onBack) { Icon(TachyonIcons.Back, contentDescription = "Back") } },
+        )
+    }
+}
+
+@Composable
+private fun SessionDetailDestination(container: AppContainer, route: SessionDetailRoute, people: Map<String, com.evolet.tachyon.twin.Person>) {
+    val session by remember(route.sessionId) { container.db.sessionDao().observe(route.sessionId) }.collectAsState(initial = null)
+    val commitments by remember(route.sessionId) { container.db.commitmentDao().observeSession(route.sessionId) }.collectAsState(initial = emptyList())
+    SessionDetailScreen(session, commitments, people)
+}
+
+@Composable
+private fun TaskDetailDestination(
+    container: AppContainer,
+    route: TaskDetailRoute,
+    people: Map<String, com.evolet.tachyon.twin.Person>,
+    onCalendar: (Commitment) -> Unit,
+    onDraft: (Commitment) -> Unit,
+) {
+    val commitment by remember(route.commitmentId) { container.db.commitmentDao().observeById(route.commitmentId) }.collectAsState(initial = null)
+    val persona by container.personaStore.persona.collectAsState()
+    TaskDetailScreen(commitment, people, persona, onCalendar, onDraft)
+}
+
+private fun TopLevelTab.icon(): ImageVector = when (this) {
+    TopLevelTab.CAPTURE -> TachyonIcons.Mic
+    TopLevelTab.SESSIONS -> TachyonIcons.History
+    TopLevelTab.TASKS -> TachyonIcons.List
+    TopLevelTab.YOU -> TachyonIcons.Person
+}
+
+private fun micGranted(context: Context) = ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+
+private fun openCalendar(context: Context, commitment: Commitment) {
+    if (!CalendarBridge.open(context, commitment)) Toast.makeText(context, "No calendar app found", Toast.LENGTH_SHORT).show()
+}
 
 private fun openTermux(context: Context) {
     val intent = context.packageManager.getLaunchIntentForPackage("com.termux")
-    if (intent != null) context.startActivity(intent)
-    else Toast.makeText(context, "Termux is not installed", Toast.LENGTH_SHORT).show()
+    if (intent != null) context.startActivity(intent) else Toast.makeText(context, "Termux is not installed", Toast.LENGTH_SHORT).show()
 }
 
 private fun openBatterySettings(context: Context) {

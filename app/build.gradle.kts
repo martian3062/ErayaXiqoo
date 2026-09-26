@@ -68,6 +68,10 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.android)
 
+    // App-like navigation with saveable, independent back stacks for each bottom tab.
+    implementation(libs.androidx.navigation3.runtime)
+    implementation(libs.androidx.navigation3.ui)
+
     // F19 reminders: survives reboot/Doze without the exact-alarm permission.
     implementation(libs.androidx.work)
 

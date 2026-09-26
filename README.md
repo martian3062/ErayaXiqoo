@@ -99,7 +99,7 @@ bash ~/ErayaXiqoo/termux/run_servers.sh
 
 ### 3. Stop the phone killing it
 
-Settings → Battery → set **Tachyon** and **Termux** to *no restrictions*. OriginOS closes background apps aggressively. The app's Settings screen has a shortcut.
+Settings → Battery → set **Tachyon** and **Termux** to *no restrictions*. OriginOS closes background apps aggressively. In Tachyon, use the top-right gear → **Demo tools** → **Allow background activity**.
 
 ### 4. Use it
 
@@ -107,14 +107,14 @@ Settings → Battery → set **Tachyon** and **Termux** to *no restrictions*. Or
 2. Open Tachyon. Both engines should show ● ready.
 3. Tap 🎙️ and have your conversation, then tap ⏹.
 4. Review the proposals: ✓ to keep, ✗ to drop.
-5. **Tasks** → *Add to calendar*.
+5. Open **Tasks**, tap a commitment, then tap *Calendar* or *Draft follow-up* on its detail screen.
 
-No mic handy? Use **Settings → Use sample recording**.
+No mic handy? Use the top-right gear → **Demo tools** → **Use sample recording**.
 
 ### Troubleshooting
 
 - **"✕ llama-server not ready"**: the Termux servers aren't running. Tap *Open Termux*, run `run_servers.sh`, then *Retry*.
-- **Nothing transcribed**: hold the phone closer, or switch the language hint in Settings.
+- **Nothing transcribed**: hold the phone closer, or use the top-right gear → **Language** to switch the hint.
 - **App stops when the screen is off**: redo step 3.
 
 ---
