@@ -80,7 +80,12 @@ class RecorderService : Service() {
             try {
                 while (isActive) {
                     val n = record.read(frame, 0, frame.size)
-                    if (n > 0) chunker.push(frame, n) else if (n < 0) break
+                    if (n > 0) {
+                        chunker.push(frame, n)
+                        session.onLevel(rmsLevel(frame, n))
+                    } else if (n < 0) {
+                        break
+                    }
                 }
             } finally {
                 record.stop()
@@ -130,6 +135,13 @@ class RecorderService : Service() {
             .setOngoing(true)
             .addAction(Notification.Action.Builder(null, "Stop", stop).build())
             .build()
+    }
+
+    /** 0..1 loudness of one 100 ms frame, for the live waveform (sqrt ≈ perceived loudness). */
+    private fun rmsLevel(frame: ShortArray, n: Int): Float {
+        var sum = 0.0
+        for (i in 0 until n) sum += frame[i].toDouble() * frame[i]
+        return (kotlin.math.sqrt(kotlin.math.sqrt(sum / n) / 6000.0)).toFloat().coerceIn(0f, 1f)
     }
 
     companion object {

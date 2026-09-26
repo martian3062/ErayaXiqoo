@@ -66,6 +66,14 @@ class SessionController(
     private val _ui = MutableStateFlow(SessionUi())
     val ui: StateFlow<SessionUi> = _ui.asStateFlow()
 
+    /** Live mic loudness 0..1 at ~10 Hz while recording (kept out of [ui] to avoid recomposing everything). */
+    private val _level = MutableStateFlow(0f)
+    val level: StateFlow<Float> = _level.asStateFlow()
+
+    fun onLevel(v: Float) {
+        _level.value = v
+    }
+
     private sealed interface Work {
         class Chunk(val pcm: ShortArray, val offsetMs: Long) : Work
         data object Finish : Work
@@ -102,6 +110,7 @@ class SessionController(
     }
 
     fun onRecordingStopped() {
+        _level.value = 0f
         _ui.update { it.copy(phase = Phase.TRANSCRIBING) }
         work.trySend(Work.Finish)
     }

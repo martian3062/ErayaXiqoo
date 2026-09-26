@@ -31,9 +31,11 @@ class PersonaStore(private val context: Context) {
     }
 
     fun savePeople(list: List<Person>) {
-        peopleFile.writeText(json.encodeToString(ListSerializer(Person.serializer()), list))
+        peopleFile.writeText(encodePeople(list))
         _people.value = list
     }
+
+    private fun encodePeople(list: List<Person>) = json.encodeToString(ListSerializer(Person.serializer()), list)
 
     /** "Delete my twin" (§10.1): persona + people + everything else under files/twin. */
     fun wipe(): List<String> {
@@ -53,7 +55,8 @@ class PersonaStore(private val context: Context) {
         if (peopleFile.isFile) {
             runCatching { return json.decodeFromString(ListSerializer(Person.serializer()), peopleFile.readText()) }
         }
-        return readDemoPeople().also { if (it.isNotEmpty()) savePeople(it) }
+        // Write the file only: this runs inside _people's initializer, so the flow doesn't exist yet.
+        return readDemoPeople().also { if (it.isNotEmpty()) peopleFile.writeText(encodePeople(it)) }
     }
 
     private fun readDemoPeople(): List<Person> = runCatching {

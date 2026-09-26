@@ -9,6 +9,10 @@ import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -59,6 +63,9 @@ fun TachyonRoot(container: AppContainer) {
     val scope = rememberCoroutineScope()
 
     val ui by container.session.ui.collectAsState()
+    val level by container.session.level.collectAsState()
+    val peopleList by container.personaStore.people.collectAsState()
+    val people = remember(peopleList) { peopleList.associateBy { it.id } }
     val engines by container.engines.status.collectAsState()
     val settings by container.settings.state.collectAsState()
     val net by container.connectivity.state.collectAsState(initial = container.connectivity.snapshot())
@@ -113,12 +120,13 @@ fun TachyonRoot(container: AppContainer) {
             }
         },
     ) { padding ->
-        Box(Modifier.padding(padding)) {
-            when (tab) {
+        AnimatedContent(tab, Modifier.padding(padding), transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "tab") { current ->
+            when (current) {
                 Tab.RECORD -> if (ui.phase == Phase.REVIEW) {
                     ProposalsScreen(
                         ui = ui,
                         items = sessionItems,
+                        people = people,
                         onAccept = { id -> scope.launch { container.confirmation.accept(id) } },
                         onReject = { id -> scope.launch { container.confirmation.reject(id) } },
                         onUndo = { id -> scope.launch { container.confirmation.undo(id) } },
@@ -130,6 +138,7 @@ fun TachyonRoot(container: AppContainer) {
                 } else {
                     RecordScreen(
                         ui = ui,
+                        level = level,
                         engines = engines,
                         onStart = {
                             if (micGranted(context)) container.session.startRecording() else launcher.launch(permissions)
@@ -140,7 +149,7 @@ fun TachyonRoot(container: AppContainer) {
                         onOpenTermux = { openTermux(context) },
                     )
                 }
-                Tab.TASKS -> TasksScreen(accepted) { c ->
+                Tab.TASKS -> TasksScreen(accepted, people) { c ->
                     if (!CalendarBridge.open(context, c)) Toast.makeText(context, "No calendar app found", Toast.LENGTH_SHORT).show()
                 }
                 Tab.SETTINGS -> {
