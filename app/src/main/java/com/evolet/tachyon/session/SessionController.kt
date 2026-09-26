@@ -3,6 +3,8 @@ package com.evolet.tachyon.session
 import android.content.Context
 import android.util.Log
 import com.evolet.tachyon.EngineRegistry
+import com.evolet.tachyon.agents.Perceiver
+import com.evolet.tachyon.agents.Planner
 import com.evolet.tachyon.audio.PcmChunker
 import com.evolet.tachyon.audio.RecorderService
 import com.evolet.tachyon.audio.SampleAudio
@@ -12,7 +14,6 @@ import com.evolet.tachyon.data.Commitment
 import com.evolet.tachyon.data.LANG_AUTO
 import com.evolet.tachyon.data.Session
 import com.evolet.tachyon.data.Status
-import com.evolet.tachyon.eraya.ExtractionAgent
 import com.evolet.tachyon.eraya.ExtractionResult
 import com.evolet.tachyon.eraya.Proposal
 import kotlinx.coroutines.CancellationException
@@ -57,7 +58,8 @@ class SessionController(
     private val context: Context,
     private val scope: CoroutineScope,
     private val engines: EngineRegistry,
-    private val extraction: ExtractionAgent,
+    private val perceiver: Perceiver,
+    private val planner: Planner,
     private val db: AppDb,
     private val settings: AppSettings,
 ) {
@@ -65,7 +67,7 @@ class SessionController(
     val ui: StateFlow<SessionUi> = _ui.asStateFlow()
 
     private sealed interface Work {
-        class Chunk(val pcm: ShortArray) : Work
+        class Chunk(val pcm: ShortArray, val offsetMs: Long) : Work
         data object Finish : Work
     }
 
@@ -75,7 +77,7 @@ class SessionController(
     init {
         scope.launch {
             for (w in work) when (w) {
-                is Work.Chunk -> transcribe(w.pcm)
+                is Work.Chunk -> transcribe(w.pcm, w.offsetMs)
                 Work.Finish -> finish()
             }
         }
@@ -94,9 +96,9 @@ class SessionController(
     }
 
     fun onChunk(pcm: ShortArray) {
-        samples.addAndGet(pcm.size.toLong())
+        val offsetMs = samples.getAndAdd(pcm.size.toLong()) * 1000 / RecorderService.SAMPLE_RATE
         _ui.update { it.copy(pendingChunks = it.pendingChunks + 1) }
-        work.trySend(Work.Chunk(pcm))
+        work.trySend(Work.Chunk(pcm, offsetMs))
     }
 
     fun onRecordingStopped() {
@@ -146,29 +148,24 @@ class SessionController(
 
     // --- pipeline steps (run sequentially on the work channel) ---
 
-    private suspend fun transcribe(pcm: ShortArray) {
-        val asr = engines.asr()
+    private suspend fun transcribe(pcm: ShortArray, offsetMs: Long) {
+        val sessionId = _ui.value.sessionId ?: return
         val hint = settings.state.value.language.takeUnless { it == LANG_AUTO }
         try {
-            // One retry: losing a chunk silently drops 30 s of speech (seen on-device when whisper-server restarted).
-            val r = try {
-                asr.transcribe(pcm, hint)
-            } catch (e: java.io.IOException) {
-                Log.w(TAG, "ASR chunk failed, retrying once", e)
-                asr.transcribe(pcm, hint)
-            }
+            val r = perceiver.perceive(sessionId, pcm, offsetMs, RecorderService.SAMPLE_RATE, hint)
             _ui.update {
                 it.copy(
-                    transcript = if (r.text.isBlank()) it.transcript else it.transcript + r.text,
+                    transcript = if (r.utterance.text.isBlank()) it.transcript else it.transcript + r.utterance.text,
                     asrMs = it.asrMs + r.latencyMs,
-                    asrEngine = asr.name,
+                    asrEngine = r.engine,
                 )
             }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
             Log.w(TAG, "ASR failed", e)
-            _ui.update { it.copy(asrEngine = asr.name, error = "ASR (${asr.name}) failed: ${e.message}") }
+            val name = engines.asr().name
+            _ui.update { it.copy(asrEngine = name, error = "ASR ($name) failed: ${e.message}") }
         } finally {
             _ui.update { it.copy(pendingChunks = (it.pendingChunks - 1).coerceAtLeast(0)) }
         }
@@ -183,7 +180,7 @@ class SessionController(
         }
         _ui.update { it.copy(phase = Phase.EXTRACTING, error = null) }
 
-        when (val r = extraction.extract(engines.llm(), transcript)) {
+        when (val r = planner.plan(s.sessionId ?: UUID.randomUUID().toString(), transcript)) {
             is ExtractionResult.Failed -> _ui.update {
                 it.copy(
                     phase = Phase.ERROR, llmMs = r.latencyMs, llmEngine = r.engine, canRetry = true,

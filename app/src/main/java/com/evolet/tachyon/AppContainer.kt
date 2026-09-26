@@ -1,6 +1,10 @@
 package com.evolet.tachyon
 
 import android.app.Application
+import com.evolet.tachyon.agents.AgentBus
+import com.evolet.tachyon.agents.Perceiver
+import com.evolet.tachyon.agents.Planner
+import com.evolet.tachyon.agents.Recoverer
 import com.evolet.tachyon.data.AppDb
 import com.evolet.tachyon.data.AppSettings
 import com.evolet.tachyon.eraya.ConfirmationLoop
@@ -22,6 +26,14 @@ class AppContainer(app: Application) {
     val prompts = Prompts(app)
 
     val engines = EngineRegistry(app, settings, scope)       // starts loading engines immediately
-    val confirmation = ConfirmationLoop(db.commitmentDao())
-    val session = SessionController(app, scope, engines, ExtractionAgent(prompts), db, settings)
+    val bus = AgentBus()
+
+    // ERAYA agents (INTEGRATIONSv2.md §3)
+    private val extraction = ExtractionAgent(prompts)
+    val perceiver = Perceiver(bus, engines::asr)
+    val planner = Planner(bus, engines::llm, extraction::extract)
+    val recoverer = Recoverer(bus, engines::retry).also { it.start(scope) }
+
+    val confirmation = ConfirmationLoop(db.commitmentDao(), bus)
+    val session = SessionController(app, scope, engines, perceiver, planner, db, settings)
 }

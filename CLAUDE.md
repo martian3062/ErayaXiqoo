@@ -181,6 +181,23 @@ tachyon/
 
 Stretch (only after F1–F9 are rehearsed): Telugu line, streaming LLM output animation, export accepted list as text share.
 
+### 6.1 Integration features (spec: `INTEGRATIONSv2.md`)
+
+Added 26 Sept 2026. Build only after F1–F9 pass in airplane mode; follow the build order and cut line in INTEGRATIONSv2.md §13.
+
+| # | Feature | Hyderabad |
+|---|---|---|
+| F10 | Handshake: two-phone signed commitments via QR + hash-chained ledger | should |
+| F11 | Eyes: whiteboard/notes → commitments via camera OCR | stretch |
+| F12 | Me attribution: owner voice-print tags "You" vs other speakers | must |
+| F13 | People-aware extraction: persona + people cards, "Tight for you" risk chip | must |
+| F14 | Twin drafts: follow-up in the owner's style, share sheet only | should |
+| F15 | Learning loop: ✓/✗ + draft edits → preference pairs → JSONL export | should |
+| F16 | Voice enrolment (3 min): consent gate, voice-print, clone reference | must (print) · stretch (clone) |
+| F17 | Behaviour interview: spoken Q&A → confirmed persona | short version |
+| F18 | Recall: voice query over the owner's commitments | stretch |
+| F19 | Own-voice reminders | stretch |
+
 ---
 
 ## 7. Interfaces (write these first)

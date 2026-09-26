@@ -60,10 +60,10 @@ class ExtractionAgent(
             when (validation) {
                 is Validation.Invalid -> ExtractionResult.Failed(validation.reason, latency, llm.name)
                 is Validation.Valid -> {
-                    Log.d(TAG, "kept=${validation.items.size} droppedNoEvidence=${validation.droppedNoEvidence} droppedLowConfidence=${validation.droppedLowConfidence}")
+                    Log.d(TAG, "kept=${validation.items.size} droppedNoEvidence=${validation.droppedNoEvidence} droppedLowConfidence=${validation.droppedLowConfidence} droppedHypothetical=${validation.droppedHypothetical}")
                     ExtractionResult.Ok(
                         items = validation.items.map { it.toProposal(date) },
-                        dropped = validation.droppedNoEvidence + validation.droppedLowConfidence,
+                        dropped = validation.droppedNoEvidence + validation.droppedLowConfidence + validation.droppedHypothetical,
                         tokensPerSec = result.tokensPerSec,
                         latencyMs = latency,
                         engine = llm.name,

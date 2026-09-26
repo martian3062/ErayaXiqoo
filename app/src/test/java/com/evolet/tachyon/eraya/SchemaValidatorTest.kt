@@ -64,4 +64,17 @@ class SchemaValidatorTest {
     @Test fun `empty list is valid`() {
         assertEquals(0, (v.validate("""{"commitments": []}""", transcript) as Validation.Valid).items.size)
     }
+
+    @Test fun `drops hedged ideas even when the model proposes them`() {
+        val raw = """{"commitments":[${item("Maybe we should also think about a WhatsApp reminder someday")},${item("I'll send you the revised intake form by Friday evening")}]}"""
+        val r = v.validate(raw, transcript) as Validation.Valid
+        assertEquals(1, r.items.size)
+        assertEquals(1, r.droppedHypothetical)
+    }
+
+    @Test fun `firm promises are not hedged`() {
+        assertEquals(false, SchemaValidator.isHedged("I'll book the training room for Monday morning today itself"))
+        assertEquals(false, SchemaValidator.isHedged("Main kal tak pharmacy ka stock report bhej dunga"))
+        assertEquals(true, SchemaValidator.isHedged("Shayad main kal bhej dunga"))
+    }
 }
