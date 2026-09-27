@@ -1,0 +1,96 @@
+{
+  "consent": "I am recording my own voice to create a private voice model for my personal use on this phone.",
+  "target_minutes": 10,
+  "prompts": [
+    {
+      "id": "introduction",
+      "question": "Introduce yourself in your natural speaking style.",
+      "cue": "Talk about what you like to be called, where you are from, and what you spend most of your time doing.",
+      "target_seconds": 40
+    },
+    {
+      "id": "daily_routine",
+      "question": "Walk through a normal day from morning to night.",
+      "cue": "Use times, transitions, places, and the small details you would naturally mention.",
+      "target_seconds": 45
+    },
+    {
+      "id": "current_project",
+      "question": "Explain a project you care about to a close friend.",
+      "cue": "Say what it does, why it matters, what is difficult, and what you want to build next.",
+      "target_seconds": 45
+    },
+    {
+      "id": "teach_topic",
+      "question": "Teach me something you know well.",
+      "cue": "Explain it step by step and include an example, as if the listener is new to it.",
+      "target_seconds": 45
+    },
+    {
+      "id": "story",
+      "question": "Tell a short memorable story from your life.",
+      "cue": "Include what happened first, how you felt, what changed, and how it ended.",
+      "target_seconds": 45
+    },
+    {
+      "id": "opinion",
+      "question": "Give your honest opinion about a technology you use every day.",
+      "cue": "Include what works, what annoys you, and what you would improve.",
+      "target_seconds": 40
+    },
+    {
+      "id": "numbers_dates",
+      "question": "Plan an imaginary week using numbers, dates, times, and prices.",
+      "cue": "Mention appointments, deadlines, phone-number-like digit groups, distances, and a budget.",
+      "target_seconds": 40
+    },
+    {
+      "id": "questions",
+      "question": "Ask a series of natural questions in different moods.",
+      "cue": "Sound curious, surprised, uncertain, excited, and serious without acting unnaturally.",
+      "target_seconds": 35
+    },
+    {
+      "id": "formal_message",
+      "question": "Speak as if you are giving a formal work update.",
+      "cue": "Summarise progress, explain one delay, give a revised deadline, and close politely.",
+      "target_seconds": 40
+    },
+    {
+      "id": "casual_message",
+      "question": "Speak as if you are sending a relaxed voice note to a close friend.",
+      "cue": "Use your real rhythm, pauses, everyday wording, and any natural English-Hindi mix you normally use.",
+      "target_seconds": 40
+    },
+    {
+      "id": "instructions",
+      "question": "Give detailed directions for completing a familiar task.",
+      "cue": "Use words like first, next, before, after, left, right, near, and finally.",
+      "target_seconds": 40
+    },
+    {
+      "id": "preferences",
+      "question": "Compare two things you like and explain your preference.",
+      "cue": "Use contrasts, examples, and a clear conclusion in your usual tone.",
+      "target_seconds": 40
+    },
+    {
+      "id": "future_plan",
+      "question": "Describe what you want your life or work to look like one year from now.",
+      "cue": "Talk about goals, possible obstacles, people involved, and how success would feel.",
+      "target_seconds": 45
+    },
+    {
+      "id": "emotional_range",
+      "question": "React naturally to several imaginary situations.",
+      "cue": "A good surprise, a frustrating delay, an uncertain decision, and a calm resolution.",
+      "target_seconds": 40
+    },
+    {
+      "id": "reflection",
+      "question": "Reflect on what makes a conversation feel genuinely human to you.",
+      "cue": "Speak slowly, use your normal pauses, and finish in your own words.",
+      "target_seconds": 40
+    }
+  ]
+}

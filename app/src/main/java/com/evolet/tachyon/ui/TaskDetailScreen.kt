@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -26,6 +25,7 @@ import com.evolet.tachyon.reminders.ReminderPlanner
 import com.evolet.tachyon.twin.Person
 import com.evolet.tachyon.twin.Persona
 import com.evolet.tachyon.ui.components.PeopleRow
+import com.evolet.tachyon.ui.components.GlassCard
 import com.evolet.tachyon.ui.components.RiskChip
 import com.evolet.tachyon.ui.components.TachyonIcons
 import java.time.LocalDateTime
@@ -64,7 +64,7 @@ fun TaskDetailScreen(
         Text("Due ${deadlineLabel(commitment)}", style = MaterialTheme.typography.titleMedium)
         if (commitment.riskNote != null) RiskChip(commitment.riskNote)
 
-        ElevatedCard(Modifier.fillMaxWidth()) {
+        GlassCard(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text("Evidence", style = MaterialTheme.typography.titleMedium)
                 Text("“${commitment.evidence}”", style = MaterialTheme.typography.bodyLarge, fontStyle = FontStyle.Italic)
@@ -72,7 +72,7 @@ fun TaskDetailScreen(
             }
         }
 
-        ElevatedCard(Modifier.fillMaxWidth()) {
+        GlassCard(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text("Reminders", style = MaterialTheme.typography.titleMedium)
                 when {
@@ -80,7 +80,7 @@ fun TaskDetailScreen(
                     reminderPlan.isEmpty() -> Text("No upcoming reminder windows remain.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     else -> reminderPlan.forEach { Text("• ${it.format(reminderTime)}", style = MaterialTheme.typography.bodyMedium) }
                 }
-                Text("Tachyon schedules at 24 h and 2 h before the deadline, adjusted for your quiet hours.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("ERAYA schedules at 24 h and 2 h before the deadline, adjusted for your quiet hours.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
 

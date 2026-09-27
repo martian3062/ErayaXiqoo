@@ -1,9 +1,12 @@
 package com.evolet.tachyon.audio
 
-/** Whisper takes at most 30 s per window: buffer PCM and emit fixed 30 s chunks. */
+/**
+ * Buffers microphone PCM into short windows for incremental Whisper transcription.
+ * Five seconds keeps enough speech context for useful text while avoiding the old 30-second wait.
+ */
 class PcmChunker(
     private val sampleRate: Int = 16_000,
-    chunkSeconds: Int = 30,
+    chunkSeconds: Int = DEFAULT_CHUNK_SECONDS,
     private val onChunk: (ShortArray) -> Unit,
 ) {
     private val chunk = ShortArray(sampleRate * chunkSeconds)
@@ -27,5 +30,9 @@ class PcmChunker(
     fun flush(minSeconds: Double = 1.0) {
         if (filled >= sampleRate * minSeconds) onChunk(chunk.copyOf(filled))
         filled = 0
+    }
+
+    companion object {
+        const val DEFAULT_CHUNK_SECONDS = 5
     }
 }

@@ -21,7 +21,11 @@ class AnswerRecorder(
     private val speechRms: Double = 700.0,
 ) {
     @SuppressLint("MissingPermission") // RECORD_AUDIO is granted on first launch
-    suspend fun record(onLevel: (Float) -> Unit, stop: () -> Boolean): ShortArray? = withContext(Dispatchers.IO) {
+    suspend fun record(
+        onLevel: (Float) -> Unit,
+        onElapsedMs: (Long) -> Unit = {},
+        stop: () -> Boolean,
+    ): ShortArray? = withContext(Dispatchers.IO) {
         val sr = RecorderService.SAMPLE_RATE
         val minBuf = AudioRecord.getMinBufferSize(sr, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
         val rec = AudioRecord(MediaRecorder.AudioSource.VOICE_RECOGNITION, sr, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, maxOf(minBuf, sr * 2))
@@ -44,6 +48,7 @@ class AnswerRecorder(
                 val rms = sqrt(sum / n)
                 onLevel((sqrt(rms / 6000.0)).toFloat().coerceIn(0f, 1f))
                 totalMs += 100
+                onElapsedMs(totalMs)
                 if (rms > speechRms) { spoke = true; quietMs = 0 } else if (spoke) quietMs += 100
                 if (spoke && quietMs >= silenceMs) break
             }

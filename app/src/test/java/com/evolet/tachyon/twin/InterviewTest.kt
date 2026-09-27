@@ -86,4 +86,33 @@ class InterviewTest {
         assertEquals(listOf("ship it", "ship it this year", "(no trait)"), saved.map { it.chosen })
         assertEquals(listOf("(no trait)", "ship it", "ship it"), saved.map { it.rejected })
     }
+
+    @Test fun `interview draft round trip preserves follow-up and trait review`() {
+        val original = InterviewDraft(
+            demo = true,
+            questionIds = listOf("q1", "q15"),
+            index = 1,
+            followUp = "Roughly how many hours or days?",
+            pendingMain = "depends",
+            answerText = "about two days",
+            answers = listOf(InterviewDraftAnswer("q1", "Evolet")),
+            review = listOf(
+                InterviewDraftReview(
+                    field = "name",
+                    value = "Evolet",
+                    evidence = "Evolet",
+                    confidence = 0.96,
+                    status = ReviewStatus.CONFIRMED,
+                    finalValue = "Evolet",
+                ),
+            ),
+            summarizedSections = setOf(1),
+            droppedTraits = 2,
+            answered = 1,
+            phase = InterviewDraftPhase.IN_PROGRESS,
+        )
+
+        assertEquals(original, InterviewDraftCodec.decode(InterviewDraftCodec.encode(original)))
+        assertNull(InterviewDraftCodec.decode("{not valid json"))
+    }
 }

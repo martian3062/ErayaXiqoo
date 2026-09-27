@@ -11,11 +11,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -29,6 +27,9 @@ import com.evolet.tachyon.data.LANG_AUTO
 import com.evolet.tachyon.data.SettingsState
 import com.evolet.tachyon.data.Tier
 import com.evolet.tachyon.ui.components.NavigationRow
+import com.evolet.tachyon.ui.components.ErayaSwitch
+import com.evolet.tachyon.ui.components.GlassCard
+import com.evolet.tachyon.ui.components.PageIntro
 import com.evolet.tachyon.ui.components.TachyonIcons
 
 @Composable
@@ -44,6 +45,7 @@ fun SettingsHomeScreen(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
+        PageIntro("Control centre", "Settings", "Tune local engines, language, reminders and demo tools without leaving the private device boundary.")
         NavigationRow("Engines", "${settings.asrTier.label()} speech · ${settings.llmTier.label()} language model", TachyonIcons.Sliders, onEngines)
         NavigationRow("Language", languageLabel(settings.language), TachyonIcons.Person, onLanguage)
         NavigationRow("Reminders", if (settings.speakReminders) "Notifications + spoken AI voice" else "Notifications only", TachyonIcons.Event, onReminders)
@@ -100,7 +102,7 @@ fun ReminderSettingsScreen(
                 Text("Speak reminders aloud", style = MaterialTheme.typography.titleMedium)
                 Hint("Uses an offline Android system voice and is always labelled AI voice.")
             }
-            Switch(checked = settings.speakReminders, onCheckedChange = { enabled -> onChange { it.copy(speakReminders = enabled) } })
+            ErayaSwitch(checked = settings.speakReminders, onCheckedChange = { enabled -> onChange { it.copy(speakReminders = enabled) } })
         }
         Button(onClick = onTestReminder, modifier = Modifier.fillMaxWidth()) { Text("Test latest accepted task") }
         Hint("Accepted tasks are scheduled at 24 h and 2 h before their deadline, adjusted for confirmed quiet hours, weekend policy and reminder tolerance.")
@@ -121,7 +123,7 @@ fun DemoToolsScreen(
         Hint("Reads $sampleWavPath, falling back to the bundled asset.")
         OutlinedButton(onClick = onOpenTermux, modifier = Modifier.fillMaxWidth()) { Text("Open Termux · restart servers") }
         OutlinedButton(onClick = onBatterySettings, modifier = Modifier.fillMaxWidth()) { Text("Allow background activity") }
-        Hint("OriginOS may stop background engines. Set Tachyon and Termux to no restrictions.")
+        Hint("OriginOS may stop background engines. Set ERAYA and Termux to no restrictions.")
         Hint("Prompt override: $promptsDir/extract_system.txt and schema.json")
     }
 }
@@ -129,16 +131,16 @@ fun DemoToolsScreen(
 @Composable
 fun AboutScreen() {
     SettingsColumn {
-        Text("Tachyon", style = MaterialTheme.typography.headlineMedium)
+        Text("ERAYA", style = MaterialTheme.typography.headlineMedium)
         Text("Built on ERAYA", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
         Text("Agents propose. Humans commit.", style = MaterialTheme.typography.headlineSmall)
-        ElevatedCard(Modifier.fillMaxWidth()) {
+        GlassCard(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text("Privacy boundary", style = MaterialTheme.typography.titleMedium)
                 Text("Audio, transcripts, commitments and twin data stay on this phone. The app has no cloud API, analytics or backup.")
             }
         }
-        Text("ERAYA's propose-then-confirm pattern and Self twin work are pre-existing. Tachyon's on-device Android implementation was built for the iQOO Hackathon; the pre-event scaffold is tagged in Git.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text("ERAYA's propose-then-confirm pattern, private Self twin, and on-device Android implementation were built for the iQOO Hackathon; the pre-event scaffold is tagged in Git.", color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
@@ -153,7 +155,7 @@ private fun SettingsColumn(content: @Composable ColumnScope.() -> Unit) {
 
 @Composable
 private fun EngineHealthCard(label: String, health: EngineHealth) {
-    ElevatedCard(Modifier.fillMaxWidth()) {
+    GlassCard(Modifier.fillMaxWidth()) {
         Column(Modifier.fillMaxWidth().padding(12.dp)) {
             Text("$label · ${health.state.name.lowercase()}", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
             Text(health.name, style = MaterialTheme.typography.bodyMedium)
@@ -164,12 +166,14 @@ private fun EngineHealthCard(label: String, health: EngineHealth) {
 
 @Composable
 private fun Choice(label: String, selected: Boolean, onSelect: () -> Unit) {
-    Row(
-        Modifier.fillMaxWidth().selectable(selected = selected, onClick = onSelect, role = Role.RadioButton),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        RadioButton(selected = selected, onClick = null)
-        Text(label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(start = 8.dp))
+    GlassCard(Modifier.fillMaxWidth().selectable(selected = selected, onClick = onSelect, role = Role.RadioButton)) {
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 7.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            RadioButton(selected = selected, onClick = null)
+            Text(label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(start = 8.dp))
+        }
     }
 }
 

@@ -27,7 +27,6 @@ import com.evolet.tachyon.data.Commitment
 import com.evolet.tachyon.data.Status
 import com.evolet.tachyon.twin.Persona
 import com.evolet.tachyon.twin.Person
-import com.evolet.tachyon.voice.SystemVoice
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filterIsInstance
@@ -74,13 +73,12 @@ class ReminderWorker(context: Context, params: WorkerParameters) : CoroutineWork
     }
 
     private suspend fun speakTierC(text: String) {
-        val voice = SystemVoice(applicationContext)
+        val voice = applicationContext.container.systemVoice
         repeat(30) { if (!voice.available) delay(100) }       // TTS engine binds asynchronously
         if (voice.available) {
             voice.speak(text)
             repeat(200) { if (voice.speaking) delay(100) }    // up to 20 s
         }
-        voice.shutdown()
     }
 
     companion object {
@@ -94,7 +92,7 @@ class ReminderWorker(context: Context, params: WorkerParameters) : CoroutineWork
             val open = PendingIntent.getActivity(context, 0, Intent(context, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
             val n = NotificationCompat.Builder(context, CHANNEL)
                 .setSmallIcon(R.drawable.ic_stat_mic)
-                .setContentTitle(if (spoken) "Tachyon · 🔊 AI voice" else "Tachyon reminder")
+                .setContentTitle(if (spoken) "ERAYA · 🔊 AI voice" else "ERAYA reminder")
                 .setContentText(text)
                 .setStyle(NotificationCompat.BigTextStyle().bigText(text))
                 .setContentIntent(open)

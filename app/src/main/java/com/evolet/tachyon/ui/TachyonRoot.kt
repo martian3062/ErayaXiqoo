@@ -19,21 +19,25 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -45,7 +49,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -61,8 +68,9 @@ import com.evolet.tachyon.data.Commitment
 import com.evolet.tachyon.data.Status
 import com.evolet.tachyon.data.Tier
 import com.evolet.tachyon.session.Phase
-import com.evolet.tachyon.twin.Stage
 import com.evolet.tachyon.ui.components.OfflineBadge
+import com.evolet.tachyon.ui.components.ErayaActionGradient
+import com.evolet.tachyon.ui.components.GlassCard
 import com.evolet.tachyon.ui.components.TachyonIcons
 import com.evolet.tachyon.ui.components.Wordmark
 import com.evolet.tachyon.ui.theme.ErayaBackdrop
@@ -71,11 +79,14 @@ import com.evolet.tachyon.ui.navigation.AppRoute
 import com.evolet.tachyon.ui.navigation.CaptureRoute
 import com.evolet.tachyon.ui.navigation.DemoToolsRoute
 import com.evolet.tachyon.ui.navigation.EnginesRoute
+import com.evolet.tachyon.ui.navigation.EyesRoute
 import com.evolet.tachyon.ui.navigation.InterviewRoute
+import com.evolet.tachyon.ui.navigation.HandshakeRoute
 import com.evolet.tachyon.ui.navigation.LanguageRoute
 import com.evolet.tachyon.ui.navigation.PeopleRoute
 import com.evolet.tachyon.ui.navigation.PrivacyRoute
 import com.evolet.tachyon.ui.navigation.ProfileRoute
+import com.evolet.tachyon.ui.navigation.ReplicaRoute
 import com.evolet.tachyon.ui.navigation.RemindersRoute
 import com.evolet.tachyon.ui.navigation.ReviewRoute
 import com.evolet.tachyon.ui.navigation.SessionDetailRoute
@@ -85,6 +96,7 @@ import com.evolet.tachyon.ui.navigation.TaskDetailRoute
 import com.evolet.tachyon.ui.navigation.TasksRoute
 import com.evolet.tachyon.ui.navigation.TopLevelTab
 import com.evolet.tachyon.ui.navigation.YouRoute
+import com.evolet.tachyon.ui.navigation.VoiceRoute
 import com.evolet.tachyon.ui.navigation.isTopLevel
 import com.evolet.tachyon.ui.navigation.rememberTachyonNavigator
 import com.evolet.tachyon.ui.navigation.title
@@ -98,7 +110,8 @@ fun TachyonRoot(container: AppContainer) {
     val navigator = rememberTachyonNavigator()
 
     val ui by container.session.ui.collectAsState()
-    val level by container.session.level.collectAsState()
+    val conversationUi by container.conversation.ui.collectAsState()
+    val conversationLevel by container.conversation.level.collectAsState()
     val peopleList by container.personaStore.people.collectAsState()
     val persona by container.personaStore.persona.collectAsState()
     val people = remember(peopleList) { peopleList.associateBy { it.id } }
@@ -107,6 +120,9 @@ fun TachyonRoot(container: AppContainer) {
     val net by container.connectivity.state.collectAsState(initial = container.connectivity.snapshot())
     val accepted by remember { container.db.commitmentDao().observeByStatus(Status.ACCEPTED) }.collectAsState(initial = emptyList())
     val sessions by remember { container.db.sessionDao().observeAll() }.collectAsState(initial = emptyList())
+    val replica by container.replicaStore.state.collectAsState()
+    val voiceProfile by container.voiceProfileStore.state.collectAsState()
+    val handshakeUi by container.handshake.ui.collectAsState()
 
     var draftFor by remember { mutableStateOf<Commitment?>(null) }
     draftFor?.let { commitment -> DraftDialog(container, commitment, peopleList) { draftFor = null } }
@@ -119,7 +135,7 @@ fun TachyonRoot(container: AppContainer) {
     }
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
         if (result[Manifest.permission.RECORD_AUDIO] != true) {
-            Toast.makeText(context, "Tachyon needs the microphone to record", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, "ERAYA needs the microphone to record", Toast.LENGTH_LONG).show()
         }
     }
     LaunchedEffect(Unit) { if (!micGranted(context)) launcher.launch(permissions) }
@@ -150,9 +166,18 @@ fun TachyonRoot(container: AppContainer) {
 
     fun deleteTwin() {
         scope.launch {
+            val voiceFiles = container.voiceProfileStore.wipe()
             val deleted = container.personaStore.wipe()
             container.db.preferenceDao().clear()
-            Toast.makeText(context, "Deleted twin data: ${deleted.joinToString().ifEmpty { "nothing stored" }} + preference pairs", Toast.LENGTH_LONG).show()
+            val replicaFiles = container.replicaStore.wipe()
+            val eyesFiles = container.eyes.wipe()
+            val handshakeEntries = container.handshake.wipe()
+            container.voiceEnrollment.refreshAfterExternalWipe()
+            Toast.makeText(
+                context,
+                "Deleted twin data: ${deleted.joinToString().ifEmpty { "nothing stored" }} + $voiceFiles voice files + preference pairs + $replicaFiles replica files + $eyesFiles Eyes files + $handshakeEntries handshake entries",
+                Toast.LENGTH_LONG,
+            ).show()
         }
     }
 
@@ -160,6 +185,7 @@ fun TachyonRoot(container: AppContainer) {
         when (navigator.currentRoute) {
             is ReviewRoute -> container.session.reset()
             is InterviewRoute -> container.interview.cancel()
+            EyesRoute -> container.eyes.discard()
             else -> Unit
         }
         navigator.back()
@@ -185,10 +211,23 @@ fun TachyonRoot(container: AppContainer) {
     val entries = entryProvider {
         entry<CaptureRoute> {
             RecordScreen(
-                ui, level, engines,
-                onStart = { if (micGranted(context)) container.session.startRecording() else launcher.launch(permissions) },
-                onStop = container.session::stopRecording,
-                onRetryExtraction = container.session::retryExtraction,
+                conversationUi, ui, conversationLevel, engines,
+                replica = replica,
+                portraitFile = container.replicaStore.portraitFile(),
+                talkingPortraitFile = container.replicaStore.talkingPortraitFile(),
+                blinkPortraitFile = container.replicaStore.blinkPortraitFile(),
+                lookLeftPortraitFile = container.replicaStore.lookLeftPortraitFile(),
+                lookRightPortraitFile = container.replicaStore.lookRightPortraitFile(),
+                onStart = { if (micGranted(context)) container.conversation.startRecording() else launcher.launch(permissions) },
+                onStop = container.conversation::stopRecording,
+                onSubmitText = container.conversation::submitText,
+                onOpenReplica = { navigator.navigateIn(TopLevelTab.YOU, ReplicaRoute) },
+                onRetryConversation = container.conversation::retry,
+                onStopSpeaking = container.conversation::stopSpeaking,
+                onClearConversation = container.conversation::clear,
+                onExtractTasks = container.session::submitText,
+                onRetryTaskExtraction = container.session::retryExtraction,
+                onOpenRecallSource = { navigator.navigateIn(TopLevelTab.TASKS, TaskDetailRoute(it)) },
                 onRetryEngines = container.engines::retry,
                 onOpenTermux = { openTermux(context) },
             )
@@ -216,7 +255,12 @@ fun TachyonRoot(container: AppContainer) {
         entry<YouRoute> {
             YouScreen(
                 persona, peopleList,
+                voiceProfile,
                 onProfile = { navigator.navigate(ProfileRoute) },
+                onReplica = { navigator.navigate(ReplicaRoute) },
+                onVoice = { navigator.navigate(VoiceRoute) },
+                onEyes = { navigator.navigate(EyesRoute) },
+                onHandshake = { navigator.navigate(HandshakeRoute) },
                 onPeople = { navigator.navigate(PeopleRoute) },
                 onInterview = { navigator.navigate(InterviewRoute(it)) },
                 onPrivacy = { navigator.navigate(PrivacyRoute) },
@@ -228,9 +272,29 @@ fun TachyonRoot(container: AppContainer) {
             }
         }
         entry<PeopleRoute> { PeopleScreen(peopleList, container.personaStore::savePeople) }
-        entry<PrivacyRoute> { PrivacyScreen(persona, peopleList.size, ::exportPrefs, ::deleteTwin) }
+        entry<ReplicaRoute> { ReplicaStudioScreen(container.replicaStore, container.replicaGenerator) }
+        entry<VoiceRoute> { VoiceEnrollmentScreen(container.voiceEnrollment) }
+        entry<EyesRoute> {
+            EyesScreen(container.eyes) { text ->
+                container.session.submitText(text)
+                navigator.reset(TopLevelTab.CAPTURE)
+                navigator.select(TopLevelTab.CAPTURE)
+            }
+        }
+        entry<HandshakeRoute> {
+            HandshakeScreen(
+                accepted = accepted,
+                ui = handshakeUi,
+                onCreateOffer = container.handshake::createOffer,
+                onNewScanCapture = container.handshake::newScanCapture,
+                onScanPhoto = container.handshake::scanPhoto,
+                onCountersign = container.handshake::countersignIncoming,
+                onToggleTamper = container.handshake::toggleTamperDemo,
+            )
+        }
+        entry<PrivacyRoute> { PrivacyScreen(persona, peopleList.size, voiceProfile, ::exportPrefs, ::deleteTwin) }
         entry<InterviewRoute> { route ->
-            LaunchedEffect(route) { if (container.interview.ui.value.stage == Stage.IDLE) container.interview.start(route.demo) }
+            LaunchedEffect(route) { container.interview.prepare(route.demo) }
             com.evolet.tachyon.ui.onboarding.InterviewScreen(container.interview) { navigator.back() }
         }
         entry<SettingsRoute> {
@@ -320,35 +384,36 @@ private fun FloatingTabBar(selected: TopLevelTab, onSelect: (TopLevelTab) -> Uni
             .navigationBarsPadding()
             .padding(horizontal = 16.dp, vertical = 10.dp),
     ) {
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(32.dp),
-            color = androidx.compose.material3.MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.92f),
-            tonalElevation = 8.dp,
-            shadowElevation = 14.dp,
-        ) {
-            NavigationBar(
-                modifier = Modifier.height(72.dp),
-                containerColor = Color.Transparent,
-                tonalElevation = 0.dp,
+        GlassCard(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(30.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth().height(70.dp).padding(7.dp),
+                horizontalArrangement = Arrangement.spacedBy(5.dp),
             ) {
-                TopLevelTab.entries.forEach { tab ->
-                    NavigationBarItem(
-                        selected = selected == tab,
-                        onClick = { onSelect(tab) },
-                        icon = { Icon(tab.icon(), contentDescription = null) },
-                        label = { Text(tab.label) },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = androidx.compose.material3.MaterialTheme.colorScheme.onPrimaryContainer,
-                            selectedTextColor = androidx.compose.material3.MaterialTheme.colorScheme.primary,
-                            indicatorColor = androidx.compose.material3.MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.92f),
-                            unselectedIconColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
-                            unselectedTextColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
-                        ),
-                    )
-                }
+                TopLevelTab.entries.forEach { tab -> DockItem(tab, selected == tab) { onSelect(tab) } }
             }
         }
+    }
+}
+
+@Composable
+private fun androidx.compose.foundation.layout.RowScope.DockItem(tab: TopLevelTab, selected: Boolean, onClick: () -> Unit) {
+    val scale by animateFloatAsState(if (selected) 1f else 0.94f, label = "dock-scale")
+    val content = if (selected) Color.White else androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
+    val selectedBrush = if (selected) ErayaActionGradient else androidx.compose.ui.graphics.Brush.linearGradient(listOf(Color.Transparent, Color.Transparent))
+    Column(
+        modifier = Modifier
+            .weight(1f)
+            .fillMaxSize()
+            .scale(scale)
+            .clip(RoundedCornerShape(22.dp))
+            .background(selectedBrush)
+            .clickable(onClick = onClick)
+            .padding(vertical = 6.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Icon(tab.icon(), contentDescription = tab.label, tint = content, modifier = Modifier.height(21.dp))
+        Text(tab.label, color = content, style = androidx.compose.material3.MaterialTheme.typography.labelSmall)
     }
 }
 
@@ -361,14 +426,22 @@ private fun AppTopBar(route: AppRoute, net: com.evolet.tachyon.net.NetState, com
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
             actions = {
                 OfflineBadge(net, compute)
-                IconButton(onClick = onSettings) { Icon(TachyonIcons.Settings, contentDescription = "Settings") }
+                IconButton(
+                    onClick = onSettings,
+                    modifier = Modifier.padding(horizontal = 8.dp).size(40.dp).clip(CircleShape).background(ErayaActionGradient),
+                ) { Icon(TachyonIcons.Settings, contentDescription = "Settings", tint = Color.White) }
             },
         )
     } else {
         TopAppBar(
             title = { Text(route.title()) },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
-            navigationIcon = { IconButton(onClick = onBack) { Icon(TachyonIcons.Back, contentDescription = "Back") } },
+            navigationIcon = {
+                IconButton(
+                    onClick = onBack,
+                    modifier = Modifier.padding(start = 8.dp).clip(CircleShape).background(androidx.compose.material3.MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.72f)),
+                ) { Icon(TachyonIcons.Back, contentDescription = "Back") }
+            },
         )
     }
 }
@@ -394,7 +467,7 @@ private fun TaskDetailDestination(
 }
 
 private fun TopLevelTab.icon(): ImageVector = when (this) {
-    TopLevelTab.CAPTURE -> TachyonIcons.Mic
+    TopLevelTab.CAPTURE -> TachyonIcons.Video
     TopLevelTab.SESSIONS -> TachyonIcons.History
     TopLevelTab.TASKS -> TachyonIcons.List
     TopLevelTab.YOU -> TachyonIcons.Person

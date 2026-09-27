@@ -16,8 +16,8 @@ android {
         applicationId = "com.evolet.tachyon"
         minSdk = 30
         targetSdk = 35
-        versionCode = 2
-        versionName = "0.7.0"
+        versionCode = 20
+        versionName = "0.18.1"
         ndk { abiFilters += "arm64-v8a" }
     }
 
@@ -55,6 +55,7 @@ dependencies {
     implementation(libs.androidx.activity.compose)
 
     implementation(platform(libs.compose.bom))
+    implementation(libs.compose.foundation)
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.compose.material3)
@@ -75,6 +76,14 @@ dependencies {
 
     // F19 reminders: survives reboot/Doze without the exact-alarm permission.
     implementation(libs.androidx.work)
+
+    // Bundled, fully on-device 468-point facial mesh used by Replica Studio.
+    implementation(libs.mlkit.face.mesh)
+
+    // F10: QR creation plus the bundled offline QR recognizer. No Play-services download.
+    implementation(libs.zxing.core)
+    implementation(libs.mlkit.barcode)
+    implementation(libs.mlkit.text.devanagari)
 
     testImplementation(libs.junit)
 }

@@ -26,4 +26,12 @@ class AudioCodecTest {
         c.flush()
         assertEquals(listOf(3_000), chunks)
     }
+
+    @Test fun `default chunker emits five second windows for live transcription`() {
+        val chunks = mutableListOf<Int>()
+        val c = PcmChunker(sampleRate = 100) { chunks += it.size }
+        c.push(ShortArray(1_250))
+        c.flush()
+        assertEquals(listOf(500, 500, 250), chunks)
+    }
 }

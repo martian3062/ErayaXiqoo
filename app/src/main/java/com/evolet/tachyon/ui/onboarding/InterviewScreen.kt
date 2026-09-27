@@ -51,17 +51,41 @@ fun InterviewScreen(controller: InterviewController, onClose: () -> Unit) {
     Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(if (ui.stage == Stage.REVIEW) "Review your traits" else "Get to know you", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.weight(1f))
-            TextButton(onClick = { controller.cancel(); onClose() }) { Text(if (ui.stage == Stage.REVIEW) "Done" else "Stop") }
+            TextButton(onClick = {
+                if (ui.stage == Stage.REVIEW) controller.finish() else controller.cancel()
+                onClose()
+            }) { Text(if (ui.stage == Stage.REVIEW) "Done" else if (ui.stage == Stage.PAUSED) "Close" else "Stop") }
         }
         when (ui.stage) {
+            Stage.PAUSED -> ResumeDraft(ui, controller, onClose)
             Stage.REVIEW -> TraitReview(ui, controller)
             Stage.SUMMARISING -> Column(Modifier.fillMaxWidth().padding(top = 32.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("Turning your answers into traits, on this phone…", style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(12.dp))
                 LinearProgressIndicator(Modifier.fillMaxWidth())
             }
-            else -> Asking(ui, level, controller)
+            Stage.ASKING, Stage.RECORDING, Stage.TRANSCRIBING -> Asking(ui, level, controller)
+            else -> Unit
         }
+    }
+}
+
+@Composable
+private fun ResumeDraft(ui: InterviewUi, controller: InterviewController, onClose: () -> Unit) {
+    Column(
+        Modifier.fillMaxWidth().padding(top = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        Text("Your private interview draft is saved", style = MaterialTheme.typography.headlineSmall)
+        Text(
+            "Continue from question ${ui.index + 1} of ${ui.questions.size}. ${ui.answered} answers and ${ui.review.size} proposed traits are stored only on this phone.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Button(onClick = controller::resume, modifier = Modifier.fillMaxWidth()) { Text("Resume interview") }
+        OutlinedButton(onClick = controller::startOver, modifier = Modifier.fillMaxWidth()) { Text("Start over") }
+        TextButton(onClick = onClose) { Text("Not now") }
     }
 }
 

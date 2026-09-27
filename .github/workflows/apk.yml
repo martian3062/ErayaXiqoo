@@ -16,9 +16,9 @@ jobs:
       - run: chmod +x ./gradlew && ./gradlew assembleDebug assembleRelease testDebugUnitTest --no-daemon
       - uses: actions/upload-artifact@v4
         with:
-          name: tachyon-debug-apk
+          name: eraya-debug-apk
           path: app/build/outputs/apk/debug/*.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: tachyon-release-apk
+          name: eraya-release-apk
           path: app/build/outputs/apk/release/*.apk

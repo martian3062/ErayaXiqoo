@@ -6,7 +6,7 @@ import java.io.IOException
 
 /**
  * Perceiver: audio in, utterances out. Retries a chunk once on an I/O error, because losing a
- * chunk silently drops 30 s of speech (seen on-device when whisper-server restarted).
+ * chunk silently drops part of the live transcript (seen on-device when whisper-server restarted).
  */
 class Perceiver(
     private val bus: AgentBus,

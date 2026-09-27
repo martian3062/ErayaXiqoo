@@ -18,6 +18,10 @@ sealed interface AppRoute : NavKey
 
 @Serializable data object ProfileRoute : AppRoute
 @Serializable data object PeopleRoute : AppRoute
+@Serializable data object ReplicaRoute : AppRoute
+@Serializable data object VoiceRoute : AppRoute
+@Serializable data object EyesRoute : AppRoute
+@Serializable data object HandshakeRoute : AppRoute
 @Serializable data class InterviewRoute(val demo: Boolean) : AppRoute
 @Serializable data object PrivacyRoute : AppRoute
 
@@ -29,14 +33,14 @@ sealed interface AppRoute : NavKey
 @Serializable data object AboutRoute : AppRoute
 
 enum class TopLevelTab(val label: String, val root: AppRoute) {
-    CAPTURE("Capture", CaptureRoute),
+    CAPTURE("Room", CaptureRoute),
     SESSIONS("Sessions", SessionsRoute),
     TASKS("Tasks", TasksRoute),
     YOU("You", YouRoute),
 }
 
 fun AppRoute.title(): String = when (this) {
-    CaptureRoute -> "Capture"
+    CaptureRoute -> "Room"
     SessionsRoute -> "Sessions"
     TasksRoute -> "Tasks"
     YouRoute -> "You"
@@ -45,6 +49,10 @@ fun AppRoute.title(): String = when (this) {
     is TaskDetailRoute -> "Commitment"
     ProfileRoute -> "My profile"
     PeopleRoute -> "People"
+    ReplicaRoute -> "Portrait Studio"
+    VoiceRoute -> "My voice"
+    EyesRoute -> "Eyes"
+    HandshakeRoute -> "Trust handshake"
     is InterviewRoute -> "Get to know me"
     PrivacyRoute -> "Privacy & export"
     SettingsRoute -> "Settings"

@@ -1,4 +1,4 @@
-# Setting up the iQOO 15 for Tachyon
+# Setting up the iQOO 15 for ERAYA
 
 Step by step, starting from a phone fresh out of the box. Plan on **about 45 minutes**, plus model downloads (~1.7 GB).
 
@@ -98,8 +98,8 @@ bash ErayaXiqoo/termux/setup.sh
 
 ```bash
 cd ~/models
-wget -O ggml-small.bin \
- https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin
+wget -O ggml-base-q5_1.bin \
+ https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base-q5_1.bin
 wget -O qwen3.5-2b-q4_0.gguf \
  https://huggingface.co/unsloth/Qwen3.5-2B-GGUF/resolve/main/Qwen3.5-2B-Q4_0.gguf
 ```
@@ -109,7 +109,7 @@ wget -O qwen3.5-2b-q4_0.gguf \
 Put both files in the phone's **Download** folder (Office Kit or `adb push file /sdcard/Download/`), then in Termux:
 
 ```bash
-cp ~/storage/downloads/ggml-small.bin ~/models/
+cp ~/storage/downloads/ggml-base-q5_1.bin ~/models/
 cp ~/storage/downloads/Qwen3.5-2B-Q4_0.gguf \
    ~/models/qwen3.5-2b-q4_0.gguf
 ```
@@ -130,11 +130,11 @@ bash ~/ErayaXiqoo/termux/run_servers.sh
 - Wait until **both** servers print a line with **listening** and `127.0.0.1:8081` / `:8082`.
 - Leave this Termux session running. To keep working, swipe from the left edge → **New session**.
 
-## 9. Install Tachyon
+## 9. Install ERAYA
 
 Pick one:
 
-- **From GitHub (phone only):** repo → **Actions** → latest green **build-apk** run → **tachyon-debug-apk** → unzip → open `app-debug.apk`.
+- **From GitHub (phone only):** repo → **Actions** → latest green **build-apk** run → **eraya-debug-apk** → unzip → open `app-debug.apk`.
 - **From the laptop:**
 
   ```bash
@@ -147,7 +147,7 @@ On first launch, allow the **Microphone** and **Notifications**.
 
 ## 10. Stop OriginOS killing the apps
 
-Do all of these for **both Tachyon and Termux**:
+Do all of these for **both ERAYA and Termux**:
 
 - [ ] **Battery:** allow high background power use / *No restrictions*
       🔍 `background power consumption` or `battery`
@@ -156,11 +156,11 @@ Do all of these for **both Tachyon and Termux**:
 - [ ] **Lock in recents:** open the recent-apps view, then long-press or pull down on the app card and tap the 🔒 lock
 - [ ] **Pause app activity if unused:** off (long-press the app icon → App info)
 
-Tachyon's top-right gear → **Demo tools** → **Allow background activity** opens the right screen.
+ERAYA's top-right gear → **Demo tools** → **Allow background activity** opens the right screen.
 
 ## 11. Smoke test
 
-1. Open Tachyon. Both lines at the top should show **● ready**:
+1. Open ERAYA. Both lines at the top should show **● ready**:
    - `ASR whisper.cpp·CPU`
    - `LLM llama.cpp·CPU·qwen3.5-2b-q4_0`
 2. Tap 🎙️, read the demo script (`demo/script_en_hi.md`) out loud, then tap ⏹.
@@ -180,7 +180,7 @@ Tachyon's top-right gear → **Demo tools** → **Allow background activity** op
 - [ ] **Do Not Disturb** on
 - [ ] Screen timeout → 10 min (🔍 `screen timeout`)
 - [ ] Brightness up, font size normal
-- [ ] Termux servers running, Tachyon shows ● ready
+- [ ] Termux servers running, ERAYA shows ● ready
 - [ ] Backup ready: top-right gear → **Demo tools** → **Use sample recording** works
 - [ ] Airplane mode ON, on camera
 
@@ -191,8 +191,8 @@ Tachyon's top-right gear → **Demo tools** → **Allow background activity** op
 **`adb devices` shows "unauthorized"**
 Unplug, replug, and accept the prompt on the phone. Still stuck? Developer options → *Revoke USB debugging authorizations*, then try again.
 
-**Tachyon shows "✕ llama-server not ready"**
-Termux was killed. Tap **Open Termux**, run `run_servers.sh` again, then tap **Retry** in Tachyon. After that, redo step 10.
+**ERAYA shows "✕ llama-server not ready"**
+Termux was killed. Tap **Open Termux**, run `run_servers.sh` again, then tap **Retry** in ERAYA. After that, redo step 10.
 
 **Servers die when the screen turns off**
 Check step 10 and the child-process setting in step 3. `run_servers.sh` already holds a wake lock; you should see a Termux notification saying so.

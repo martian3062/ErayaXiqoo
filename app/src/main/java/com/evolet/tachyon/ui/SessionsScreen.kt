@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -27,6 +26,7 @@ import com.evolet.tachyon.data.Status
 import com.evolet.tachyon.twin.Person
 import com.evolet.tachyon.ui.components.LatencyBadge
 import com.evolet.tachyon.ui.components.PeopleRow
+import com.evolet.tachyon.ui.components.GlassCard
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -53,7 +53,7 @@ fun SessionsScreen(items: List<Session>, onOpen: (Session) -> Unit) {
             )
         }
         items(items, key = { it.id }) { session ->
-            ElevatedCard(Modifier.fillMaxWidth()) {
+            GlassCard(Modifier.fillMaxWidth()) {
                 Column(
                     Modifier.fillMaxWidth().clickable { onOpen(session) }.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -102,7 +102,7 @@ fun SessionDetailScreen(session: Session?, items: List<Commitment>, people: Map<
             LatencyBadge(session.asrMs, session.llmMs, null, listOf(session.asrEngine, session.llmEngine))
         }
         item {
-            ElevatedCard(Modifier.fillMaxWidth()) {
+            GlassCard(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Transcript", style = MaterialTheme.typography.titleMedium)
                     Text(session.transcript, style = MaterialTheme.typography.bodyLarge)
@@ -116,7 +116,7 @@ fun SessionDetailScreen(session: Session?, items: List<Commitment>, people: Map<
             Text("${items.size} found · $accepted accepted · $rejected rejected", color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         items(items, key = { it.id }) { commitment ->
-            ElevatedCard(Modifier.fillMaxWidth()) {
+            GlassCard(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(commitment.task, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))

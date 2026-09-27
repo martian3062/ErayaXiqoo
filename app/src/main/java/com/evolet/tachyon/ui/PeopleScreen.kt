@@ -11,7 +11,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -24,6 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.evolet.tachyon.twin.Person
+import com.evolet.tachyon.ui.components.GlassCard
 
 @Composable
 fun PeopleScreen(people: List<Person>, onSave: (List<Person>) -> Unit) {
@@ -38,7 +38,7 @@ fun PeopleScreen(people: List<Person>, onSave: (List<Person>) -> Unit) {
             Text("These are demo contacts, not your phone contacts. They stay in internal storage.", color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         items(people, key = { it.id }) { person ->
-            ElevatedCard(onClick = { editing = person }, modifier = Modifier.fillMaxWidth()) {
+            GlassCard(onClick = { editing = person }, modifier = Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(person.name, style = MaterialTheme.typography.titleMedium)
                     Text("${person.relation.ifBlank { "No relationship" }} · ${person.register} · ${person.channel}", color = MaterialTheme.colorScheme.onSurfaceVariant)

@@ -29,7 +29,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 /**
- * Foreground mic service (type=microphone). Reads 16 kHz mono PCM and hands 30 s chunks to
+ * Foreground mic service (type=microphone). Reads 16 kHz mono PCM and hands short chunks to
  * SessionController, which transcribes each one while recording carries on (F1, F2).
  */
 class RecorderService : Service() {
@@ -47,14 +47,21 @@ class RecorderService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (intent?.action == ACTION_STOP) stopRecording() else startRecording()
+        if (intent?.action == ACTION_STOP) {
+            stopRecording()
+        } else {
+            startRecording(RecordingTarget.fromWireName(intent?.getStringExtra(EXTRA_TARGET)))
+        }
         return START_NOT_STICKY
     }
 
     @SuppressLint("MissingPermission") // RECORD_AUDIO is checked by the UI before starting the service
-    private fun startRecording() {
+    private fun startRecording(target: RecordingTarget) {
         if (job != null) return
-        val session = container.session
+        val sink = when (target) {
+            RecordingTarget.COMMITMENTS -> container.session
+            RecordingTarget.CONVERSATION -> container.conversation
+        }
         val minBuf = AudioRecord.getMinBufferSize(SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
         val record = AudioRecord(
             MediaRecorder.AudioSource.VOICE_RECOGNITION,
@@ -63,7 +70,7 @@ class RecorderService : Service() {
         )
         if (record.state != AudioRecord.STATE_INITIALIZED) {
             record.release()
-            session.onRecorderError("Microphone unavailable")
+            sink.onRecorderError("Microphone unavailable")
             shutdown()
             return
         }
@@ -72,9 +79,9 @@ class RecorderService : Service() {
             .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "tachyon:recording")
             .apply { acquire(MAX_RECORDING_MS) }
 
-        session.onRecordingStarted()
+        sink.onRecordingStarted()
         job = scope.launch {
-            val chunker = PcmChunker(SAMPLE_RATE, onChunk = session::onChunk)
+            val chunker = PcmChunker(SAMPLE_RATE, onChunk = sink::onChunk)
             val frame = ShortArray(SAMPLE_RATE / 10) // 100 ms reads
             record.startRecording()
             try {
@@ -82,7 +89,7 @@ class RecorderService : Service() {
                     val n = record.read(frame, 0, frame.size)
                     if (n > 0) {
                         chunker.push(frame, n)
-                        session.onLevel(rmsLevel(frame, n))
+                        sink.onLevel(rmsLevel(frame, n))
                     } else if (n < 0) {
                         break
                     }
@@ -91,7 +98,7 @@ class RecorderService : Service() {
                 record.stop()
                 record.release()
                 chunker.flush()
-                session.onRecordingStopped()
+                sink.onRecordingStopped()
             }
         }
     }
@@ -129,7 +136,7 @@ class RecorderService : Service() {
         )
         return Notification.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_mic)
-            .setContentTitle("Tachyon is listening")
+            .setContentTitle("ERAYA is listening")
             .setContentText("Audio stays on this phone")
             .setContentIntent(open)
             .setOngoing(true)
@@ -147,12 +154,16 @@ class RecorderService : Service() {
     companion object {
         const val SAMPLE_RATE = 16_000
         private const val ACTION_STOP = "com.evolet.tachyon.STOP"
+        private const val EXTRA_TARGET = "com.evolet.tachyon.RECORDING_TARGET"
         private const val CHANNEL_ID = "recording"
         private const val NOTIFICATION_ID = 42
         private const val MAX_RECORDING_MS = 30 * 60 * 1000L
 
-        fun start(context: Context) =
-            ContextCompat.startForegroundService(context, Intent(context, RecorderService::class.java))
+        fun start(context: Context, target: RecordingTarget = RecordingTarget.COMMITMENTS) =
+            ContextCompat.startForegroundService(
+                context,
+                Intent(context, RecorderService::class.java).putExtra(EXTRA_TARGET, target.wireName),
+            )
 
         fun stop(context: Context) {
             context.startService(Intent(context, RecorderService::class.java).setAction(ACTION_STOP))

@@ -35,6 +35,10 @@ interface CommitmentDao {
     @Query("SELECT * FROM Commitment WHERE status = :status ORDER BY decidedAt DESC")
     fun observeByStatus(status: Status): Flow<List<Commitment>>
 
+    /** F18 source set. Ownership is enforced again by [CommitmentRecallEngine]. */
+    @Query("SELECT * FROM Commitment WHERE status IN ('ACCEPTED', 'REJECTED') ORDER BY decidedAt DESC")
+    suspend fun recallable(): List<Commitment>
+
     /** Only ever called from a user tap (ConfirmationLoop). */
     @Query("UPDATE Commitment SET status = :status, decidedAt = :decidedAt WHERE id = :id")
     suspend fun decide(id: String, status: Status, decidedAt: Long?)

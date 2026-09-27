@@ -20,5 +20,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "tachyon"
+rootProject.name = "ERAYA"
 include(":app")

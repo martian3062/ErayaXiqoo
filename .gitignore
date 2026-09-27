@@ -1,6 +1,7 @@
 # Gradle / Android
 .gradle/
 build/
+dist/
 local.properties
 .idea/
 *.iml
@@ -25,4 +26,8 @@ recordings/
 
 # Python
 __pycache__/
+*.pyc
 .venv/
+
+# Local Codex/device inspection artifacts
+.codex-*

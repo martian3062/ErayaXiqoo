@@ -9,4 +9,4 @@ cd ~/src
 [ -d whisper.cpp ] || git clone --depth 1 https://github.com/ggml-org/whisper.cpp
 cd ~/src/llama.cpp   && cmake -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build -j8 --target llama-server
 cd ~/src/whisper.cpp && cmake -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build -j8 --target whisper-server
-echo "Done. Copy models into ~/models (ggml-small.bin, *.gguf)."
+echo "Done. Copy models into ~/models (ggml-base-q5_1.bin, *.gguf)."

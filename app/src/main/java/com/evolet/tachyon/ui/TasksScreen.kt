@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -24,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.evolet.tachyon.data.Commitment
 import com.evolet.tachyon.twin.Person
 import com.evolet.tachyon.ui.components.PeopleRow
+import com.evolet.tachyon.ui.components.GlassCard
 import com.evolet.tachyon.ui.components.TachyonIcons
 import java.time.LocalDate
 
@@ -58,7 +58,7 @@ fun TasksScreen(items: List<Commitment>, people: Map<String, Person>, onOpen: (C
 @Composable
 private fun TaskCard(c: Commitment, people: Map<String, Person>, onClick: () -> Unit) {
     val to = c.toPersonId?.let { people[it] }
-    ElevatedCard(Modifier.fillMaxWidth()) {
+    GlassCard(Modifier.fillMaxWidth()) {
         Row(Modifier.fillMaxWidth().clickable(onClick = onClick).padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(c.task, style = MaterialTheme.typography.titleMedium)

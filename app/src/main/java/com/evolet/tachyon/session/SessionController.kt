@@ -7,6 +7,7 @@ import com.evolet.tachyon.agents.Perceiver
 import com.evolet.tachyon.agents.Planner
 import com.evolet.tachyon.audio.PcmChunker
 import com.evolet.tachyon.audio.RecorderService
+import com.evolet.tachyon.audio.RecordingSink
 import com.evolet.tachyon.audio.SampleAudio
 import com.evolet.tachyon.data.AppDb
 import com.evolet.tachyon.data.AppSettings
@@ -62,7 +63,7 @@ class SessionController(
     private val planner: Planner,
     private val db: AppDb,
     private val settings: AppSettings,
-) {
+) : RecordingSink {
     private val _ui = MutableStateFlow(SessionUi())
     val ui: StateFlow<SessionUi> = _ui.asStateFlow()
 
@@ -70,8 +71,8 @@ class SessionController(
     private val _level = MutableStateFlow(0f)
     val level: StateFlow<Float> = _level.asStateFlow()
 
-    fun onLevel(v: Float) {
-        _level.value = v
+    override fun onLevel(value: Float) {
+        _level.value = value
     }
 
     private sealed interface Work {
@@ -93,7 +94,7 @@ class SessionController(
 
     // --- called by RecorderService (or runSample) ---
 
-    fun onRecordingStarted(fromSample: Boolean = false) {
+    override fun onRecordingStarted(fromSample: Boolean) {
         samples.set(0)
         _ui.value = SessionUi(
             phase = Phase.RECORDING,
@@ -103,19 +104,19 @@ class SessionController(
         )
     }
 
-    fun onChunk(pcm: ShortArray) {
+    override fun onChunk(pcm: ShortArray) {
         val offsetMs = samples.getAndAdd(pcm.size.toLong()) * 1000 / RecorderService.SAMPLE_RATE
         _ui.update { it.copy(pendingChunks = it.pendingChunks + 1) }
         work.trySend(Work.Chunk(pcm, offsetMs))
     }
 
-    fun onRecordingStopped() {
+    override fun onRecordingStopped() {
         _level.value = 0f
         _ui.update { it.copy(phase = Phase.TRANSCRIBING) }
         work.trySend(Work.Finish)
     }
 
-    fun onRecorderError(message: String) {
+    override fun onRecorderError(message: String) {
         _ui.update { it.copy(phase = Phase.ERROR, error = message, canRetry = false) }
     }
 
@@ -126,6 +127,22 @@ class SessionController(
     }
 
     fun stopRecording() = RecorderService.stop(context)
+
+    /** Sends typed conversation text through the same local planning and review pipeline as audio. */
+    fun submitText(text: String) {
+        val clean = text.trim()
+        if (clean.isEmpty() || _ui.value.busy) return
+        samples.set(0)
+        _level.value = 0f
+        _ui.value = SessionUi(
+            phase = Phase.EXTRACTING,
+            sessionId = UUID.randomUUID().toString(),
+            startedAt = System.currentTimeMillis(),
+            transcript = listOf(clean),
+            asrEngine = TYPED_INPUT,
+        )
+        work.trySend(Work.Finish)
+    }
 
     fun retryExtraction() {
         val s = _ui.value
@@ -237,5 +254,6 @@ class SessionController(
 
     private companion object {
         const val TAG = "SessionController"
+        const val TYPED_INPUT = "Typed input"
     }
 }

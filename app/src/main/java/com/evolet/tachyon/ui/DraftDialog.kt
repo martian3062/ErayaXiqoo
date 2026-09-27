@@ -34,7 +34,7 @@ import com.evolet.tachyon.ui.components.Avatar
 
 /**
  * F14: draft a follow-up in the owner's style for a chosen person. Editable; "Share" opens the
- * Android share sheet — Tachyon never sends anything itself. Edits become F15 preference pairs.
+ * Android share sheet — ERAYA never sends anything itself. Edits become F15 preference pairs.
  */
 @Composable
 fun DraftDialog(container: AppContainer, commitment: Commitment, people: List<Person>, onDismiss: () -> Unit) {

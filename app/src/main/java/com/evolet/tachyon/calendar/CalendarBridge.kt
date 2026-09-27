@@ -24,7 +24,7 @@ object CalendarBridge {
             .putExtra(CalendarContract.Events.TITLE, c.task + (c.toWhom?.let { " → $it" } ?: ""))
             .putExtra(
                 CalendarContract.Events.DESCRIPTION,
-                "Commitment by ${c.owner}.\nEvidence: “${c.evidence}”\n\nConfirmed in Tachyon, on-device.",
+                "Commitment by ${c.owner}.\nEvidence: “${c.evidence}”\n\nConfirmed in ERAYA, on-device.",
             )
         val iso = c.deadlineIso ?: return intent
         val zone = ZoneId.systemDefault()
